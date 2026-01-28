@@ -15,11 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call([
+            BranchSeeder::class,
+            CategorySeeder::class,
+            SupplierSeeder::class,
+            ProductSeeder::class,
+            UserSeeder::class, // Includes Employees
+        ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Now that masters exist, we can simulate business activity
+        $this->call([
+            InitialStockSeeder::class,
+            TransactionSeeder::class, // Fake Sales and POs
         ]);
     }
 }
