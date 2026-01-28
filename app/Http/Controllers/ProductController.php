@@ -13,19 +13,23 @@ class ProductController extends Controller
         $products = Product::with('category')
             ->when($request->category, fn($q) => $q->where('category_id', $request->category))
             ->paginate(12);
-            
+
+        if ($request->has('branch_id')) {
+            $products->where('branch_id', $request->branch_id);
+        }
+
         return response()->json($products);
     }
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category_id' => 'required|exists:categories,id',
-            'description' => 'nullable|string|max:2048'
-        ]);
+    public function store(Request $request) {
+        $product = Product::create($request->except('images'));
 
-        $product = Product::create($validated);
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('products', 'public');
+                $product->images()->create(['path' => $path]);
+            }
+        }
         return response()->json($product, 201);
     }
 

@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             SupplierSeeder::class,
             ProductSeeder::class,
             UserSeeder::class, // Includes Employees
+            CustomerSeeder::class // Added the one we just discussed!
         ]);
 
         // Now that masters exist, we can simulate business activity
