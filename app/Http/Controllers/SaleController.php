@@ -3,11 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
+use App\Services\StockService; // Import your new service
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class SaleController extends Controller
 {
+    protected $stockService;
+
+    public function __construct(StockService $stockService) {
+        $this->stockService = $stockService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -39,7 +45,7 @@ class SaleController extends Controller
 
             // 4. Update Stocks & Record to StockLog (Kartu Stok)
             foreach ($request->items as $item) {
-                $this->stockService->decrease($item['product_id'], $item['quantity']);
+                $this->stockService->decrease($request->branch_id, $item['product_id'], $item['quantity']);
             }
 
             return new SaleResource($sale->load(['items', 'payments']));

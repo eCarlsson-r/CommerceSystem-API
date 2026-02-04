@@ -31,4 +31,8 @@ class Product extends Model
     {
         return $this->morphMany(Media::class, 'model');
     }
+
+    public function stocks() {
+        return $this->hasMany(Stock::class); // This links to your 'stocks' table (the branch-product pivot)
+    }
 }
