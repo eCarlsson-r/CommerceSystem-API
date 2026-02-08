@@ -13,7 +13,7 @@ class Category extends Model
 
     protected $guarded = ['id'];
 
-    public function images()
+    public function media()
     {
         return $this->morphMany(Media::class, 'model');
     }

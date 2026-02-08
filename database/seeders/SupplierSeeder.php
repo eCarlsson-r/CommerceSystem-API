@@ -16,6 +16,8 @@ class SupplierSeeder extends Seeder
         Supplier::create([
             'name' => 'Global Tech Distro',
             'contact_person' => 'Budi Setiawan',
+            'tax_id' => '1234567890',
+            'address' => 'Jl. Setiabudi No. 123',
             'email' => 'budi@globaltech.com',
             'phone' => '0812-3456-7890'
         ]);

@@ -14,8 +14,13 @@ class Branch extends Model
 
     protected $guarded = ['id'];
 
-    public function images()
+    public function media()
     {
         return $this->morphMany(Media::class, 'model');
+    }
+
+    public function sales()
+    {
+        return $this->hasMany(Sale::class);
     }
 }

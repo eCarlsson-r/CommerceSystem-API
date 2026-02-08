@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('purchase_price', 12, 2);
             $table->decimal('sale_price', 12, 2);
             $table->integer('discount_percent')->default(0);
+            $table->integer('min_stock_level')->default(0);
             $table->timestamps();
         });
     }

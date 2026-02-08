@@ -75,4 +75,22 @@ class SaleController extends Controller
     {
         //
     }
+
+    public function recent()
+    {
+        return Sale::with(['branch:id,name', 'customer:id,name'])
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(function ($sale) {
+                return [
+                    'id' => $sale->id,
+                    'invoice_no' => $sale->invoice_no,
+                    'branch' => $sale->branch->name,
+                    'customer' => $sale->customer->name ?? 'Guest',
+                    'total' => $sale->total_amount,
+                    'time' => $sale->created_at->diffForHumans(),
+                ];
+            });
+    }
 }

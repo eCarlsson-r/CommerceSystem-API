@@ -12,7 +12,8 @@ class Stock extends Model
         'quantity', 
         'purchase_price', 
         'sale_price', 
-        'discount_percent'
+        'discount_percent',
+        'min_stock_level'
     ];
 
     public function product()

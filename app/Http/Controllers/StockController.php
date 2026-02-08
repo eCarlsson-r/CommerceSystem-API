@@ -41,4 +41,21 @@ class StockController extends Controller
 
         return response()->json($stock);
     }
+
+    public function receiveTransfer($id) {
+        return DB::transaction(function () use ($id) {
+            $transfer = StockTransfer::findOrFail($id);
+            
+            foreach ($transfer->items as $item) {
+                $this->stockService->increase(
+                    $transfer->to_branch_id, 
+                    $item->product_id, 
+                    $item->quantity,
+                    'TRANSFER_IN'
+                );
+            }
+            
+            $transfer->update(['status' => 'R']);
+        });
+    }
 }

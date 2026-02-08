@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Stock;
+use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Http\Resources\ProductResource;
+use App\Events\ProductUpdated;
 
 class ProductController extends Controller
 {
-    // List for both Next.js and Angular
     public function index(Request $request)
     {
         $products = Product::with('category')
@@ -24,7 +28,6 @@ class ProductController extends Controller
     public function store(Request $request) 
     {
         return DB::transaction(function () use ($request) {
-            // 1. Validate (handling the 'images' array from Angular)
             $validated = $request->validate([
                 'name' => 'required|string',
                 'sku' => 'required|unique:products,sku',
@@ -34,25 +37,21 @@ class ProductController extends Controller
                 'images.*' => 'nullable|image|mimes:jpg,jpeg,png|max:2048'
             ]);
 
-            // 2. Create the Universal Product
             $product = Product::create($validated);
 
-            // 3. Handle Multiple Images
             if ($request->hasFile('images')) {
                 foreach ($request->file('images') as $file) {
                     $path = $file->store('products/gallery', 'public');
-                    $product->images()->create(['path' => $path]);
+                    $product->media()->create(['path' => $path]);
                 }
             }
 
-            // 4. THE 11-BRANCH AUTO-SETUP
-            // Get all branch IDs (Medan, Binjai, etc.)
             $branchIds = Branch::pluck('id');
 
             foreach ($branchIds as $branchId) {
                 $product->stocks()->create([
                     'branch_id' => $branchId,
-                    'quantity' => 0, // Starts at zero
+                    'quantity' => 0,
                     'min_stock_level' => $validated['min_stock_alert'] // Uses your form value
                 ]);
             }
@@ -74,5 +73,17 @@ class ProductController extends Controller
     {
         $product->delete();
         return response()->json($product);
+    }
+
+    public function lowStock(Request $request)
+    {
+        $query = Stock::with(['product', 'branch'])
+            ->whereColumn('quantity', '<=', 'min_stock_level');
+
+        if ($request->has('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
+        }
+
+        return response()->json($query->get());
     }
 }

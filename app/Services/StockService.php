@@ -43,6 +43,31 @@ class StockService
         ]);
     }
 
+    // Inside your StockService.php
+    public function recordPurchase(int $productId, int $branchId, int $quantity, float $purchasePrice)
+    {
+        return DB::transaction(function () use ($productId, $branchId, $quantity, $purchasePrice) {
+            $stock = Stock::where('product_id', $productId)
+                        ->where('branch_id', $branchId)
+                        ->first();
+
+            // Increase stock
+            $stock->increment('quantity', $quantity);
+
+            // Record the "Kartu Stok" entry
+            StockLog::create([
+                'stock_id' => $stock->id,
+                'type' => 'purchase',
+                'quantity_change' => $quantity,
+                'balance_after' => $stock->fresh()->quantity,
+                'description' => "Purchased at Rp " . number_format($purchasePrice),
+                'user_id' => auth()->id()
+            ]);
+            
+            // Optional: Update the product's base_price if you use "Average Costing"
+        });
+    }
+
     public function increase(int $branchId, int $productId, int $quantity, string $reference = 'PURCHASE')
     {
         // 1. Find or Create Stock Record

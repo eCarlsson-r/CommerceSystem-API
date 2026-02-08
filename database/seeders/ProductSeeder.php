@@ -20,10 +20,13 @@ class ProductSeeder extends Seeder
 
         // Attach a fake media record
         $coffee->media()->create([
-            'file_name' => 'coffee-beans.jpg',
+            'file_name' => 'coffee-beans',
             'path' => 'uploads/product/coffee-beans.jpg',
             'mime_type' => 'image/jpeg',
+            'extension' => 'jpg',
             'size' => 102400,
+            'model_id' => $coffee->id,
+            'model_type' => Product::class,
         ]);
     }
 }
