@@ -12,7 +12,7 @@ class SupplierController extends Controller
      */
     public function index()
     {
-        //
+        return Supplier::all();
     }
 
     /**
@@ -20,7 +20,15 @@ class SupplierController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'contact_person' => 'required|string',
+            'tax_id' => 'required|string',
+            'email' => 'nullable|email',
+            'address' => 'nullable|string',
+            'phone' => 'required'
+        ]);
+        return Supplier::create($validated);
     }
 
     /**
@@ -28,7 +36,7 @@ class SupplierController extends Controller
      */
     public function show(Supplier $supplier)
     {
-        //
+        return $supplier;
     }
 
     /**
@@ -36,7 +44,15 @@ class SupplierController extends Controller
      */
     public function update(Request $request, Supplier $supplier)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'contact_person' => 'required|string',
+            'tax_id' => 'required|string',
+            'phone' => 'required',
+            'email' => 'nullable|email',
+            'address' => 'nullable|string'
+        ]);
+        return $supplier->update($validated);
     }
 
     /**
@@ -44,6 +60,6 @@ class SupplierController extends Controller
      */
     public function destroy(Supplier $supplier)
     {
-        //
+        return $supplier->delete();
     }
 }

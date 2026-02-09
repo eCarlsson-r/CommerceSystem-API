@@ -8,6 +8,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\StockController;
+use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\ReturnController;
 
 // Protected Routes
 Route::get('/user', function (Request $request) {
@@ -25,24 +31,16 @@ Route::prefix('v1/admin')->group(function () {
 });
 // Private Routes (For Angular Admin/POS)
 Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
-    Route::get('/branches', [BranchController::class, 'index']);
-    Route::post('/branches', [BranchController::class, 'store']);
-    Route::put('/branches/{id}', [BranchController::class, 'update']);
-    Route::delete('/branches/{id}', [BranchController::class, 'destroy']);
-    Route::get('/customers', [CustomerController::class, 'index']);
-    Route::post('/customers', [CustomerController::class, 'store']);
-    Route::put('/customers/{id}', [CustomerController::class, 'update']);
-    Route::delete('/customers/{id}', [CustomerController::class, 'destroy']);
-    Route::get('/categories', [CategoryController::class, 'index']);
-    Route::post('/categories', [CategoryController::class, 'store']);
-    Route::put('/categories/{id}', [CategoryController::class, 'update']);
-    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
-    Route::get('/products', [ProductController::class, 'index']);
-    Route::post('/products', [ProductController::class, 'store']);
-    Route::put('/products/{id}', [ProductController::class, 'update']);
-    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+    Route::apiResource('branches', BranchController::class);
+    Route::apiResource('customers', CustomerController::class);
+    Route::apiResource('employees', EmployeeController::class);
+    Route::apiResource('categories', CategoryController::class);
     Route::patch('/products/{id}/stock', [ProductController::class, 'updateStock']);
     Route::get('/products/low-stock', [ProductController::class, 'lowStock']);
+    Route::apiResource('products', ProductController::class);
+    Route::apiResource('suppliers', SupplierController::class);
+    Route::apiResource('stock-transfers', StockTransferController::class);
+    Route::apiResource('returns', ReturnController::class);
     Route::post('/receive', [StockController::class, 'receiveTransfer']);
     Route::get('/reports/financial-overview', [ReportController::class, 'financialOverview']);
     Route::get('/reports/inventory-matrix', [ReportController::class, 'inventoryMatrix']);

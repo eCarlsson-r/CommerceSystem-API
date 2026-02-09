@@ -14,15 +14,17 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $products = Product::with('category')
-            ->when($request->category, fn($q) => $q->where('category_id', $request->category))
-            ->paginate(12);
+        $products = Product::with('category');
+
+        if ($request->has('category')) {
+            $products->where('category_id', $request->category);
+        }
 
         if ($request->has('branch_id')) {
             $products->where('branch_id', $request->branch_id);
         }
 
-        return response()->json($products);
+        return response()->json($products->get());
     }
 
     public function store(Request $request) 

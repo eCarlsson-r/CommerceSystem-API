@@ -17,4 +17,9 @@ class Category extends Model
     {
         return $this->morphMany(Media::class, 'model');
     }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }

@@ -12,7 +12,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::all();
+        $categories = Category::with('products')->get();
         return response()->json($categories);
     }
 
@@ -33,21 +33,17 @@ class CategoryController extends Controller
         return response()->json($category);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Category $category)
-    {
-        $category->update($request->all());
-        return response()->json($category);
+    public function update(Request $request, Category $category) {
+        $category->update($request->validate(['name' => 'required|string']));
+        return $category;
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Category $category)
-    {
+    public function destroy(Category $category) {
+        // Check if category has products before deleting
+        if ($category->products()->exists()) {
+            return response()->json(['message' => 'Cannot delete category with products'], 422);
+        }
         $category->delete();
-        return response()->json($category);
+        return response()->noContent();
     }
 }

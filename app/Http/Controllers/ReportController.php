@@ -70,4 +70,30 @@ class ReportController extends Controller
 
         return response()->json($products);
     }
+
+    public function supplierPerformance()
+    {
+        return Supplier::withCount('purchaseOrders')
+            ->get()
+            ->map(function ($supplier) {
+                // Calculate total items bought from this supplier
+                $totalBought = DB::table('purchase_order_items')
+                    ->join('purchase_orders', 'purchase_order_items.purchase_order_id', '=', 'purchase_orders.id')
+                    ->where('purchase_orders.supplier_id', $supplier->id)
+                    ->sum('quantity');
+
+                // Calculate items from this supplier that ended up in Waste
+                // Note: This requires a supplier_id or PO reference in your WasteLog
+                $totalWaste = WasteLog::where('supplier_id', $supplier->id)->sum('quantity');
+
+                return [
+                    'id' => $supplier->id,
+                    'name' => $supplier->name,
+                    'po_count' => $supplier->purchase_orders_count,
+                    'total_volume' => $totalBought,
+                    'waste_volume' => $totalWaste,
+                    'defect_rate' => $totalBought > 0 ? ($totalWaste / $totalBought) * 100 : 0,
+                ];
+            });
+    }
 }

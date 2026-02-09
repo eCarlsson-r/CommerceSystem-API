@@ -12,6 +12,7 @@ class Supplier extends Model
         'tax_id',
         'address',
         'phone',
+        'email'
     ];
 
     protected $guarded = ['id'];

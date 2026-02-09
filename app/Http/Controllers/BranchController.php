@@ -12,7 +12,7 @@ class BranchController extends Controller
      */
     public function index()
     {
-        //
+        return Branch::all();
     }
 
     /**
@@ -20,7 +20,17 @@ class BranchController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'address' => 'required|string',
+            'phone' => 'required'
+        ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('branches');
+        }
+
+        return Branch::create($validated);
     }
 
     /**
@@ -28,7 +38,7 @@ class BranchController extends Controller
      */
     public function show(Branch $branch)
     {
-        //
+        return $branch;
     }
 
     /**
@@ -36,7 +46,17 @@ class BranchController extends Controller
      */
     public function update(Request $request, Branch $branch)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string',
+            'address' => 'required|string',
+            'phone' => 'required'
+        ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('branches');
+        }
+
+        return $branch->update($validated);
     }
 
     /**
@@ -44,6 +64,6 @@ class BranchController extends Controller
      */
     public function destroy(Branch $branch)
     {
-        //
+        return $branch->delete();
     }
 }

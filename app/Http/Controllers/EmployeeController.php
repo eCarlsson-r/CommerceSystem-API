@@ -18,9 +18,24 @@ class EmployeeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
-    {
-        //
+    public function store(Request $request) {
+        $data = $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'branch_id' => 'required|exists:branches,id',
+            'role' => 'required'
+        ]);
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+            'branch_id' => $data['branch_id'],
+            'role' => $data['role']
+        ]);
+
+        return response()->json($user);
     }
 
     /**
