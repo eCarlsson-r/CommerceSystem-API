@@ -84,6 +84,8 @@ class ProductController extends Controller
 
         if ($request->has('branch_id')) {
             $query->where('branch_id', $request->branch_id);
+        } else if ($request->has('scoped_branch_id')) {
+            $query->where('branch_id', $request->scoped_branch_id);
         }
 
         return response()->json($query->get());

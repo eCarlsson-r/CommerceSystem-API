@@ -4,11 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Scopes\BranchScope;
 
 class Sale extends Model {
     use SoftDeletes;
+    
+    protected static function booted()
+    {
+        static::addGlobalScope(new BranchScope);
+    }
+
     protected $fillable = [
         'invoice_number',
+        'date',
         'branch_id',
         'employee_id',
         'customer_id',

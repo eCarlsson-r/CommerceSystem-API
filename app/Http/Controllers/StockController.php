@@ -7,9 +7,14 @@ use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
-    public function index()
-    {
-        return Stock::with('product')->get();
+    public function index(Request $request) {
+        $query = Stock::query();
+
+        if ($request->has('scoped_branch_id')) {
+            $query->where('branch_id', $request->scoped_branch_id);
+        }
+
+        return $query->get();
     }
 
     public function store(Request $request)

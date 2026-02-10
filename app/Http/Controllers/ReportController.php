@@ -96,4 +96,31 @@ class ReportController extends Controller
                 ];
             });
     }
+
+    public function getBranchDailySummary(Request $request, $branchId)
+    {
+        // 1. Today's Revenue for this branch
+        $todaySales = Sale::where('branch_id', $branchId)
+            ->whereDate('created_at', now())
+            ->sum('total_amount');
+
+        // 2. Low Stock Count
+        // We check the matrix for any product where quantity is below the warning threshold
+        $lowStockItems = DB::table('stock_matrix')
+            ->where('branch_id', $branchId)
+            ->whereRaw('quantity <= min_stock')
+            ->count();
+
+        // 3. Pending Incoming Transfers
+        // Shipments where 'to_branch_id' is this branch and status is 'M' (Moving)
+        $pendingDeliveries = StockTransfer::where('to_branch_id', $branchId)
+            ->where('status', 'M')
+            ->count();
+
+        return response()->json([
+            'todaySales' => (float)$todaySales,
+            'lowStockItems' => $lowStockItems,
+            'pendingDeliveries' => $pendingDeliveries
+        ]);
+    }
 }

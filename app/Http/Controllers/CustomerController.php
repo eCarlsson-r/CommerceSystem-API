@@ -21,11 +21,29 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'phone' => 'nullable|string',
+            'name' => 'required|string',
+            'mobile' => 'required|unique:customers,mobile',
+            'email' => 'nullable|email|unique:users,username',
         ]);
 
-        return Customer::create($validated);
+        return DB::transaction(function () use ($validated) {
+            // Create User for E-commerce access
+            $user = User::create([
+                'username' => $validated['email'] ?? $validated['mobile'],
+                'password' => Hash::make('123456'), // Default temp password
+                'type' => 'customer'
+            ]);
+
+            $customer = Customer::create([
+                'user_id' => $user->id,
+                'name' => $validated['name'],
+                'mobile' => $validated['mobile'],
+                'email' => $validated['email'],
+                'status' => 'active'
+            ]);
+
+            return response()->json($customer, 201);
+        });
     }
 
     /**

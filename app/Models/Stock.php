@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Scopes\BranchScope;
 
 class Stock extends Model
 {
@@ -15,6 +16,11 @@ class Stock extends Model
         'discount_percent',
         'min_stock_level'
     ];
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new BranchScope);
+    }
 
     public function product()
     {
