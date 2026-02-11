@@ -19,15 +19,7 @@ class DatabaseSeeder extends Seeder
             BranchSeeder::class,
             CategorySeeder::class,
             SupplierSeeder::class,
-            ProductSeeder::class,
             UserSeeder::class, // Includes Employees
-            CustomerSeeder::class // Added the one we just discussed!
-        ]);
-
-        // Now that masters exist, we can simulate business activity
-        $this->call([
-            InitialStockSeeder::class,
-            TransactionSeeder::class, // Fake Sales and POs
         ]);
     }
 }

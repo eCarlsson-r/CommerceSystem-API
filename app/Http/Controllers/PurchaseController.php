@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Models\Purchase;
+use App\Models\PurchaseOrder;
 use App\Services\StockService;
 
 class PurchaseController extends Controller
@@ -20,7 +20,7 @@ class PurchaseController extends Controller
      */
     public function index()
     {
-        //
+        return PurchaseOrder::with('items')->get();
     }
 
     /**
@@ -29,8 +29,8 @@ class PurchaseController extends Controller
     public function store(Request $request) {
         return DB::transaction(function () use ($request) {
             // 1. Record the Purchase
-            $purchase = Purchase::create([
-                'branch_id' => $request->branch_id,
+            $purchase = PurchaseOrder::create([
+                'supplier_id' => $request->supplier_id,
                 'total_amount' => $request->total_amount,
                 'user_id' => auth()->id(),
                 'reference_number' => 'PO-' . strtoupper(Str::random(8))

@@ -4,32 +4,93 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Models\Employee;
+use App\Models\Customer;
 
 class AuthController extends Controller
 {
-    public function login(Request $request) {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+    public function login(Request $request)
+    {
+        // Handle login logic here
+        $credentials = $request->only('username', 'password');
+        $user = User::where('username', $request->username)->first();
 
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials'], 401);
+        if (auth()->attempt($credentials)) {
+            if ($request->header('Origin') === env('STORE_URL') && $user->role == 'CUSTOMER') {
+                $customer = Customer::where('user_id', $user->id)->first();
+                $token = auth()->user()->createToken('web-token')->plainTextToken;
+                if ($customer) $user->customer = $customer;
+                return response()->json(['data' => $user, 'token' => $token], 200);
+            } else if ($request->header('Origin') === env('POS_URL') && $user->role != 'CUSTOMER') {
+                $employee = Employee::where('user_id', $user->id)->first();
+                $token = auth()->user()->createToken('admin-token')->plainTextToken;
+                if ($employee) $user->employee = $employee;
+                return response()->json(['data' => $user, 'token' => $token], 200);
+            } else {
+                auth()->logout();
+                return response()->json(['message' => 'Username or Password is invalid'], 401);
+            }
+        } else if (!$user) {
+            return response()->json(['message' => 'No account exist with the given username.'], 401);
+        } else if (!Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Password is incorrect.'], 401);
+        } else {
+            return response()->json(['message' => 'Username or Password is invalid'], 401);
         }
+    }
 
-        $user = $request->user();
-        
-        // Create token with abilities based on role
-        $token = $user->createToken('pos-token', [$user->role])->plainTextToken;
+    public function user(Request $request)
+    {
+        if ($request->header('Origin') === env('STORE_URL') && $request->user()->type == 'CUSTOMER') {
+            return $request->user()->load('customer');
+        } else if ($request->header('Origin') === env('POS_URL') && $request->user()->type != 'CUSTOMER') {
+            return $request->user()->load('employee');
+        }
+    }
 
-        return response()->json([
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'role' => $user->role,
-                'branch_id' => $user->branch_id, // Crucial for the 11-branch logic
-            ]
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['message' => 'Logged out of the system.'], 200);
+    }
+
+    public function subscribe(Request $request)
+    {
+        $user = User::find($request->input('user_id'));
+        $user->updatePushSubscription(
+            $request->input('endpoint'), 
+            $request->input('public_key'), 
+            $request->input('auth_token'), 
+            $request->input('content_encoding')
+        );
+
+        return response()->json(['success' => true]);
+    }
+
+    public function register(Request $request) {
+        $customer = Customer::create([
+            'name' => $request->input('name'),
+            'gender' => $request->input('gender'),
+            'date_of_birth' => $request->input('date_of_birth'),
+            'place_of_birth' => $request->input('place_of_birth'),
+            'email' => $request->input('email'),
+            'mobile' => $request->input('mobile'),
+            'user_id' => User::create([
+                'username' => $request->input('email'),
+                'password' => Hash::make($request->input('password')),
+                'type' => 'CUSTOMER'
+            ])->id,
+            'address' => $request->input('address'),
+            'country' => $request->input('country'),
+            'province' => $request->input('province'),
+            'city' => $request->input('city')
         ]);
+
+        if ($customer) {
+            return response()->json($customer, 201);
+        } else {
+            return response()->json(['message' => 'Failed to register'], 500);
+        }
     }
 }

@@ -12,7 +12,7 @@ class EmployeeController extends Controller
      */
     public function index()
     {
-        //
+        return Employee::with('branch')->get();
     }
 
     /**
@@ -75,7 +75,16 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, Employee $employee)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'branch_id' => 'required|exists:branches,id',
+            'mobile' => 'required|string',
+            'email' => 'nullable|email',
+            'join_date' => 'required|date'
+        ]);
+
+        $employee->update($validated);
+        return $employee;
     }
 
     public function offboard(Request $request, $id)

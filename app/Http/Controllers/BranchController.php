@@ -56,7 +56,8 @@ class BranchController extends Controller
             $validated['image'] = $request->file('image')->store('branches');
         }
 
-        return $branch->update($validated);
+        $branch->update($validated);
+        return $branch;
     }
 
     /**

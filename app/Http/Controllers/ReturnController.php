@@ -3,9 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\PurchaseReturn;
+use App\Models\WasteLog;
+use App\Services\StockService;
 
 class ReturnController extends Controller
 {
+    protected $stockService;
+
+    public function __construct(StockService $stockService) {
+        $this->stockService = $stockService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -19,7 +28,7 @@ class ReturnController extends Controller
      */
     public function store(Request $request) {
         return DB::transaction(function () use ($request) {
-            $return = ProductReturn::create([
+            $return = PurchaseReturn::create([
                 'sale_id' => $request->sale_id,
                 'branch_id' => $request->branch_id,
                 'reason' => $request->reason,

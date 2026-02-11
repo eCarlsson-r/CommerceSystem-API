@@ -14,14 +14,16 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $products = Product::with('category');
+        $products = Product::with('category', 'stocks');
 
         if ($request->has('category')) {
             $products->where('category_id', $request->category);
         }
 
         if ($request->has('branch_id')) {
-            $products->where('branch_id', $request->branch_id);
+            $products->whereHas('stocks', function ($query) use ($request) {
+                $query->where('branch_id', $request->branch_id);
+            });
         }
 
         return response()->json($products->get());
