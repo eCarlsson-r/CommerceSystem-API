@@ -56,11 +56,13 @@ class ProductController extends Controller
                 $product->stocks()->create([
                     'branch_id' => $branchId,
                     'quantity' => 0,
-                    'min_stock_level' => $validated['min_stock_alert'] // Uses your form value
+                    'purchase_price' => 0,
+                    'sale_price' => $validated['base_price'],
+                    'min_stock_level' => $validated['min_stock_alert']
                 ]);
             }
 
-            return new ProductResource($product->load('images'));
+            return new ProductResource($product->load('media'));
         });
     }
 

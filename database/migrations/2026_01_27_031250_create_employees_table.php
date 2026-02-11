@@ -21,7 +21,7 @@ return new class extends Migration
             $table->date('join_date');
             $table->date('quit_date')->nullable();
             $table->string('phone', 20);
-            $table->string('email', 50)->unique();
+            $table->string('email', 50)->nullable()->unique();
             $table->timestamps();
         });
     }

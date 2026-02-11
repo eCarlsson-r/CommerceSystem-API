@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('phone')->nullable();
+            $table->string('mobile')->nullable();
             $table->string('email')->unique()->nullable();
             $table->text('address')->nullable();
             $table->decimal('balance', 15, 2)->default(0); // Track debt/credit

@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class EmployeeController extends Controller
 {
@@ -27,8 +30,7 @@ class EmployeeController extends Controller
             'join_date' => 'required|date',
             'create_account' => 'boolean',
             'username' => 'required_if:create_account,true|unique:users,username',
-            'password' => 'required_if:create_account,true|min:6',
-            'type' => 'required_if:create_account,true|in:admin,staff',
+            'password' => 'required_if:create_account,true|min:6'
         ]);
 
         return DB::transaction(function () use ($validated) {
@@ -39,7 +41,7 @@ class EmployeeController extends Controller
                 $user = User::create([
                     'username' => $validated['username'],
                     'password' => Hash::make($validated['password']),
-                    'type' => $validated['type'],
+                    'type' => "staff",
                 ]);
                 $userId = $user->id;
             }

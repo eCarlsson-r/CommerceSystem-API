@@ -12,7 +12,7 @@ class ProductSeeder extends Seeder
     public function run()
     {
         $coffee = Product::create([
-            'code' => 'COF-001',
+            'sku' => 'COF-001',
             'name' => 'Signature Roasted Beans',
             'category_id' => 1,
             'description' => 'Premium store-blend coffee beans.',

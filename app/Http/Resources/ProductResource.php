@@ -21,7 +21,7 @@ class ProductResource extends JsonResource
             'base_price' => $this->base_price,
             'min_stock_alert' => $this->min_stock_alert,
             // Map the images to return full URLs
-            'images' => $this->images->map(fn($img) => [
+            'images' => $this->media->map(fn($img) => [
                 'id' => $img->id,
                 'url' => asset('storage/' . $img->path),
             ]),
