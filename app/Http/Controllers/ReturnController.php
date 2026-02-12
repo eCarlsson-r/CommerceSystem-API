@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use App\Models\PurchaseReturn;
+use App\Models\PurchaseReturnItem;
 use App\Models\WasteLog;
 use App\Services\StockService;
+use App\Http\Resources\PurchaseReturnItemResource;
 
 class ReturnController extends Controller
 {
@@ -20,7 +23,8 @@ class ReturnController extends Controller
      */
     public function index()
     {
-        //
+        $returns = PurchaseReturnItem::with('product', 'purchaseReturn.branch', 'purchaseReturn.supplier')->get();
+        return PurchaseReturnItemResource::collection($returns);
     }
 
     /**
@@ -29,10 +33,13 @@ class ReturnController extends Controller
     public function store(Request $request) {
         return DB::transaction(function () use ($request) {
             $return = PurchaseReturn::create([
-                'sale_id' => $request->sale_id,
+                'return_number' => 'RET-' . strtoupper(Str::random(8)),
+                'supplier_id' => $request->supplier_id,
                 'branch_id' => $request->branch_id,
                 'reason' => $request->reason,
-                'user_id' => auth()->id()
+                'total_amount' => $request->total_amount,
+                'user_id' => auth()->id(),
+                'return_date' => date('Y-m-d')
             ]);
 
             foreach ($request->items as $item) {
@@ -46,7 +53,7 @@ class ReturnController extends Controller
                         $item['quantity'],
                         'RETURN_RESTOCK'
                     );
-                } else {
+                }/* else {
                     // Record as waste - No stock increase
                     WasteLog::create([
                         'branch_id' => $request->branch_id,
@@ -54,7 +61,7 @@ class ReturnController extends Controller
                         'quantity' => $item['quantity'],
                         'reason' => 'Damaged Return: ' . $request->reason
                     ]);
-                }
+                }*/
             }
             return response()->json(['message' => 'Return processed successfully']);
         });

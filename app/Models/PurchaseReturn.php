@@ -4,20 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Scopes\BranchScope;
 
 class PurchaseReturn extends Model
 {
     use SoftDeletes;
-
-    protected static function booted()
-    {
-        static::addGlobalScope(new BranchScope);
-    }
     
     protected $fillable = [
-        'purchase_order_id',
+        'return_number',
+        'supplier_id',
+        'branch_id',
         'reason',
+        'total_amount',
+        'user_id',
+        'return_date'
     ];
 
     public function items()
@@ -25,8 +24,13 @@ class PurchaseReturn extends Model
         return $this->hasMany(PurchaseReturnItem::class);
     }
 
-    public function purchaseOrder()
+    public function supplier()
     {
-        return $this->belongsTo(PurchaseOrder::class);
+        return $this->belongsTo(Supplier::class);
+    }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
     }
 }

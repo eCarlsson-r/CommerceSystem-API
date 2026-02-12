@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
             $table->string('invoice_number')->unique(); // e.g., INV-2026-0001
+            $table->date('date');
             $table->foreignId('branch_id')->constrained();
             $table->foreignId('employee_id')->constrained();
             $table->foreignId('customer_id')->nullable()->constrained();

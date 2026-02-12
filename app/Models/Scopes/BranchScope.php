@@ -13,10 +13,9 @@ class BranchScope implements Scope
     {
         $user = Auth::user();
         
-        // If the user is a 'staff' or 'manager', they only see their branch data.
-        // 'super-admin' (Medan HQ) can see everything.
-        if ($user && $user->role !== 'super-admin') {
-            $builder->where('branch_id', $user->branch_id);
+        if ($user->employee) {
+            $branchId = $user->employee->branch_id;
+            $builder->where('branch_id', $branchId);
         }
     }
 }

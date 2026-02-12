@@ -46,9 +46,18 @@ class ReportController extends Controller
             'branch_id' => 'required|exists:branches,id',
         ]);
 
-        $logs = StockLog::where('product_id', $request->product_id)
+        $stock = Stock::where('product_id', $request->product_id)
             ->where('branch_id', $request->branch_id)
-            ->with('user:id,name') // Who performed the action?
+            ->first();
+
+        if (!$stock) {
+            return response()->json([
+                'message' => 'Stock not found',
+            ], 404);
+        }
+
+        $logs = StockLog::where('stock_id', $stock->id)
+            ->with('user.employee') // Who performed the action?
             ->latest()
             ->paginate(20);
 

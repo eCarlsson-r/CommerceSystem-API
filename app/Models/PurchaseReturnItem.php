@@ -11,7 +11,8 @@ class PurchaseReturnItem extends Model
         'product_id',
         'quantity',
         'condition',
-        'reason'
+        'unit_price',
+        'total_price'
     ];
 
     public function purchaseReturn()

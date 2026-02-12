@@ -10,11 +10,19 @@ class StockController extends Controller
     public function index(Request $request) {
         $query = Stock::query();
 
-        if ($request->has('scoped_branch_id')) {
+        if ($request->has('branch_id') && $request->branch_id > 0) {
+            $query->where('branch_id', $request->branch_id);
+        } else if ($request->has('scoped_branch_id')) {
             $query->where('branch_id', $request->scoped_branch_id);
+        } 
+        
+        if ($request->has('category_id') && $request->category_id > 0) {
+            $query->whereHas('product', function ($q) use ($request) {
+                $q->where('category_id', $request->category_id);
+            });
         }
 
-        return $query->get();
+        return $query->with('product')->get();
     }
 
     public function store(Request $request)

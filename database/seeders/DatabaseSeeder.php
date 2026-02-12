@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Settings;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -19,7 +20,21 @@ class DatabaseSeeder extends Seeder
             BranchSeeder::class,
             CategorySeeder::class,
             SupplierSeeder::class,
-            UserSeeder::class, // Includes Employees
+            UserSeeder::class,
+            EmployeeSeeder::class,
+            CustomerSeeder::class,
+            ProductSeeder::class,
+            StockSeeder::class,
+            SaleSeeder::class,
+            PurchaseOrderSeeder::class,
+            StockTransferSeeder::class,
+            PurchaseReturnSeeder::class,
+            StockLogSeeder::class,
         ]);
+
+        Settings::updateOrCreate(
+            ['key' => 'cost_cipher_key'],
+            ['value' => 'MEDANCLUBS']
+        );
     }
 }

@@ -34,7 +34,7 @@ class CustomerController extends Controller
             $user = User::create([
                 'username' => $validated['email'] ?? $validated['mobile'],
                 'password' => Hash::make('123456'), // Default temp password
-                'type' => 'customer'
+                'role' => 'customer'
             ]);
 
             $customer = Customer::create([
@@ -49,12 +49,12 @@ class CustomerController extends Controller
         });
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Customer $customer)
+    public function history($id)
     {
-        //
+        $customer = Customer::findOrFail($id);
+        $sales = $customer->sales;
+        $sales->load('items.product');
+        return response()->json($sales);
     }
 
     /**

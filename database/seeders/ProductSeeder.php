@@ -2,31 +2,57 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Product;
+use App\Models\Category;
 
 class ProductSeeder extends Seeder
 {
-    // database/seeders/ProductSeeder.php
     public function run()
     {
-        $coffee = Product::create([
-            'sku' => 'COF-001',
-            'name' => 'Signature Roasted Beans',
-            'category_id' => 1,
-            'description' => 'Premium store-blend coffee beans.',
-        ]);
+        $categories = Category::all();
 
-        // Attach a fake media record
-        $coffee->media()->create([
-            'file_name' => 'coffee-beans',
-            'path' => 'uploads/product/coffee-beans.jpg',
-            'mime_type' => 'image/jpeg',
-            'extension' => 'jpg',
-            'size' => 102400,
-            'model_id' => $coffee->id,
-            'model_type' => Product::class,
-        ]);
+        $products = [
+            [
+                'sku' => '0010000001',
+                'name' => 'Dolphin Crystal',
+                'category_id' => $categories->where('name', 'Crystals')->first()?->id ?? 1,
+                'description' => 'Single dolphin crystal.',
+            ],
+            [
+                'sku' => '001000002',
+                'name' => 'Lotus Crystal',
+                'category_id' => $categories->where('name', 'Crystals')->first()?->id ?? 1,
+                'description' => 'Single lotus crystal.',
+            ],
+            [
+                'sku' => '002000001',
+                'name' => 'Rose Earring',
+                'category_id' => $categories->where('name', 'Jewelry')->first()?->id ?? 2,
+                'description' => 'A pair of rose earring.',
+            ],
+            [
+                'sku' => '002000002',
+                'name' => 'Gold Chain',
+                'category_id' => $categories->where('name', 'Jewelry')->first()?->id ?? 2,
+                'description' => 'A pair of gold chain.',
+            ],
+            [
+                'sku' => '0030000001',
+                'name' => 'Winnie The Pooh',
+                'category_id' => $categories->where('name', 'Dolls')->first()?->id ?? 3,
+                'description' => 'Doll of Winnie The Pooh holding honey cup.',
+            ],
+            [
+                'sku' => '0030000002',
+                'name' => 'Keroppi',
+                'category_id' => $categories->where('name', 'Dolls')->first()?->id ?? 3,
+                'description' => 'Doll of Keroppi.',
+            ]
+        ];
+
+        foreach ($products as $pData) {
+            Product::create($pData);
+        }
     }
 }

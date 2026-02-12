@@ -68,7 +68,7 @@ class StockService
         });
     }
 
-    public function increase(int $branchId, int $productId, int $quantity, string $reference = 'PURCHASE')
+    public function increase(int $branchId, int $productId, int $quantity, string $referenceId, string $type = 'PURCHASE')
     {
         // 1. Find or Create Stock Record
         $stock = Stock::firstOrCreate(
@@ -86,7 +86,7 @@ class StockService
             'type'            => $type,
             'description'     => "Received {$quantity} units via {$referenceId}",
             'quantity_change' => $quantity, // Positive for 'GET' logic
-            'balance_after'   => $newBalance,
+            'balance_after'   => $stock->fresh()->quantity,
             'user_id'         => auth()->id()
         ]);
     }

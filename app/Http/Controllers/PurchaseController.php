@@ -20,7 +20,7 @@ class PurchaseController extends Controller
      */
     public function index()
     {
-        return PurchaseOrder::with('items')->get();
+        return PurchaseOrder::with('items', 'supplier', 'branch')->where('status', 'pending')->get();
     }
 
     /**
@@ -31,9 +31,12 @@ class PurchaseController extends Controller
             // 1. Record the Purchase
             $purchase = PurchaseOrder::create([
                 'supplier_id' => $request->supplier_id,
+                'branch_id' => $request->branch_id,
                 'total_amount' => $request->total_amount,
                 'user_id' => auth()->id(),
-                'reference_number' => 'PO-' . strtoupper(Str::random(8))
+                'order_date' => $request->order_date,
+                'expected_date' => $request->expected_date,
+                'order_number' => 'PO-' . strtoupper(Str::random(8))
             ]);
 
             foreach ($request->items as $item) {
@@ -45,7 +48,8 @@ class PurchaseController extends Controller
                 $this->stockService->increase(
                     $request->branch_id, 
                     $item['product_id'], 
-                    $item['quantity']
+                    $item['quantity'],
+                    $purchase->order_number
                 );
             }
 

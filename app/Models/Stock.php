@@ -17,11 +17,6 @@ class Stock extends Model
         'min_stock_level'
     ];
 
-    protected static function booted()
-    {
-        static::addGlobalScope(new BranchScope);
-    }
-
     public function product()
     {
         return $this->belongsTo(Product::class);

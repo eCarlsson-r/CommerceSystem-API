@@ -8,9 +8,11 @@ use App\Http\Resources\StockTransferResource;
 use App\Models\StockTransferItem;
 use App\Models\StockTransfer;
 use App\Events\StockReceived;
+use App\Events\StockTransferCreated;
 use App\Events\InventoryUpdated;
 use App\Models\Stock;
 use App\Models\User;
+use App\Models\Employee;
 use App\Notifications\StockTransferRequest;
 
 class StockTransferController extends Controller
@@ -24,20 +26,25 @@ class StockTransferController extends Controller
     // Inside StockTransferController@store
     public function store(Request $request) 
     {
-        $transfer = StockTransfer::create([
-            'from_branch_id' => $request->from_branch_id,
-            'to_branch_id' => $request->to_branch_id,
-            'status' => 'M',
-            'items' => $request->items
-        ]);
+        return DB::transaction(function () use ($request) {
+            $transfer = StockTransfer::create([
+                'date' => date('Y-m-d'),
+                'created_by' => $request->user_id,
+                'from_branch_id' => $request->from_branch_id,
+                'to_branch_id' => $request->to_branch_id,
+                'status' => 'M',
+                'items' => $request->items
+            ]);
 
-        // Find staff at the destination branch
-        $staffAtDestination = User::where('branch_code', $request->to_branch_code)->get();
+            foreach ($request->items as $item) {
+                $transfer->items()->create($item);
+            }
 
-        // Send the WebPush!
-        \Notification::send($staffAtDestination, new StockTransferRequest($transfer));
+            // Fire the creation event (handles notifications and broadcasting)
+            event(new StockTransferCreated($transfer));
 
-        return response()->json($transfer);
+            return response()->json($transfer);
+        });
     }
 
     // Inside StockTransferController@receive
@@ -58,7 +65,7 @@ class StockTransferController extends Controller
                 $stock->logs()->create([
                     'reference_id' => $transfer->id,
                     'type' => 'transfer',
-                    'description' => "Received from Branch: " . $transfer->from_branch_code,
+                    'description' => "Received from Branch: " . $transfer->fromBranch->name,
                     'quantity_change' => $item->quantity,
                     'balance_after' => $newBalance,
                     'user_id' => auth()->id()

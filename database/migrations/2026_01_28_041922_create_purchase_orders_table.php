@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('purchase_orders', function (Blueprint $table) {
             $table->id();
             $table->string('order_number');
-            $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('supplier_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('branch_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
             $table->date('order_date'); 
             $table->date('expected_date');
             $table->decimal('total_amount', 10, 2);

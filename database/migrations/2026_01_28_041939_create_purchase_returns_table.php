@@ -13,7 +13,15 @@ return new class extends Migration
     {
         Schema::create('purchase_returns', function (Blueprint $table) {
             $table->id();
+            $table->string('return_number')->unique();
+            $table->foreignId('purchase_order_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->date('return_date');
+            $table->string('reason');
+            $table->decimal('total_amount', 15, 2);
+            $table->string('status')->default('pending');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

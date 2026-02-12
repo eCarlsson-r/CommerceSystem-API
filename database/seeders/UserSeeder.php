@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
-use App\Models\Employee;
 use Illuminate\Support\Facades\Hash;
 
 class UserSeeder extends Seeder
@@ -22,6 +21,20 @@ class UserSeeder extends Seeder
             'username' => 'admin',
             'password' => Hash::make('password'),
             'role' => 'admin'
+        ]);
+
+        // Manager User
+        User::create([
+            'username' => 'manager',
+            'password' => Hash::make('password'),
+            'role' => 'manager'
+        ]);
+
+        // Staff User
+        User::create([
+            'username' => 'staff',
+            'password' => Hash::make('password'),
+            'role' => 'staff'
         ]);
     }
 }
