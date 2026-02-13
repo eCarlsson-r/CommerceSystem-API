@@ -11,14 +11,14 @@
 
 ## ✨ Key Features
 
-### 🛒 Storefront API (`/v1/shop`)
+### 🛒 Storefront API
 
 Public-facing endpoints optimized for high-performance eCommerce experiences.
 
 - **Product Discovery**: Paginated listing with category filtering.
 - **Detailed Views**: Slug-based product identification for SEO-friendly URLs.
 
-### 🔐 Admin & POS API (`/v1/admin`)
+### 🔐 Admin & POS API
 
 Highly secure endpoints protected by **Laravel Sanctum**, designed for internal management.
 
@@ -102,13 +102,37 @@ composer dev
 
 ## 📡 API Overview (v1)
 
-| Endpoint                        | Method  | Description             | Auth Required |
-| :------------------------------ | :------ | :---------------------- | :-----------: |
-| `/v1/shop/products`             | `GET`   | List available products |      ❌       |
-| `/v1/shop/products/{slug}`      | `GET`   | Get product details     |      ❌       |
-| `/v1/admin/products`            | `POST`  | Create a new product    |      ✅       |
-| `/v1/admin/products/{id}/stock` | `PATCH` | Update inventory levels |      ✅       |
-| `/v1/admin/sales`               | `POST`  | Process a new sale      |      ✅       |
+| Endpoint                   | Method | Description                      | Auth Required |
+| :------------------------- | :----- | :------------------------------- | :-----------: |
+| `/products`                | `GET`  | List available products          |      ❌       |
+| `/products/{slug}`         | `GET`  | Get product details              |      ❌       |
+| `/products`                | `POST` | Create a new product             |      ✅       |
+| `/sales`                   | `POST` | Process a new sale               |      ✅       |
+| `/reports/sales-report`    | `GET`  | Itemized sales analytics         |      ✅       |
+| `/reports/purchase-report` | `GET`  | Supplier spend analysis          |      ✅       |
+| `/reports/daily-closing`   | `GET`  | Reconciliation & cash flow stats |      ✅       |
+| `/reports/stock-audit`     | `GET`  | Inventory discrepancy log        |      ✅       |
+
+---
+
+## 🏗 Database Seeding
+
+The project comes with a comprehensive suite of seeders to populate the environment with realistic commerce data.
+
+To re-seed the entire database:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+**Available Seeders**:
+
+- `BranchSeeder`: Sets up retail locations (e.g., Medan Warehouse, Jakarta Store).
+- `SupplierSeeder`: Common vendor profiles.
+- `ProductSeeder`: Populates the catalog with diverse category assignments.
+- `SaleSeeder`: Generates historical transaction records for testing reports.
+- `PurchaseOrderSeeder`: Procurement cycle data.
+- `StockLogSeeder`: Complete audit trail for every single item movement.
 
 ---
 

@@ -7,6 +7,7 @@ use App\Models\Stock;
 use App\Models\Branch;
 use App\Models\Sale;
 use App\Models\StockLog;
+use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -131,5 +132,35 @@ class ReportController extends Controller
             'lowStockItems' => $lowStockItems,
             'pendingDeliveries' => $pendingDeliveries
         ]);
+    }
+
+    public function salesReport(Request $request)
+    {
+        $request->validate([
+            'branch_id' => 'required|integer',
+            'employee_id' => 'required|integer',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $sales = Sale::whereBetween('date', [$request->start_date, $request->end_date]);
+        if ($request->branch_id > 0) $sales->where('branch_id', $request->branch_id);
+        if ($request->employee_id > 0) $sales->where('employee_id', $request->employee_id);
+
+        return response()->json($sales->with('items.product', 'branch', 'employee')->get());
+    }
+
+    public function purchaseReport(Request $request)
+    {
+        $request->validate([
+            'supplier_id' => 'required|integer',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $purchases = PurchaseOrder::whereBetween('order_date', [$request->start_date, $request->end_date]);
+        if ($request->supplier_id > 0) $purchases->where('supplier_id', $request->supplier_id);
+
+        return response()->json($purchases->with('items.product', 'supplier', 'branch')->get());
     }
 }

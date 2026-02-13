@@ -14,6 +14,10 @@ class SalePayment extends Model {
     ];
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'amount_paid' => 'integer',
+    ];
     
     public function sale() { return $this->belongsTo(Sale::class); }
 }

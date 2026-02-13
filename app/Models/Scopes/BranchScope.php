@@ -13,7 +13,7 @@ class BranchScope implements Scope
     {
         $user = Auth::user();
         
-        if ($user->employee) {
+        if ($user && $user->employee) {
             $branchId = $user->employee->branch_id;
             $builder->where('branch_id', $branchId);
         }

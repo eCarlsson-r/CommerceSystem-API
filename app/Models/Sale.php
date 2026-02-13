@@ -28,6 +28,13 @@ class Sale extends Model {
     ];
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'subtotal' => 'integer',
+        'tax_amount' => 'integer',
+        'discount_amount' => 'integer',
+        'grand_total' => 'integer',
+    ];
     
     // Relationships
     public function items() { return $this->hasMany(SaleItem::class); }

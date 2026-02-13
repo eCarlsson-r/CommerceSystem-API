@@ -33,12 +33,28 @@ class SaleController extends Controller
                 'invoice_number' => 'INV-' . time(),
                 'branch_id' => $request->branch_id,
                 'employee_id' => auth()->id(),
+                'subtotal' => $request->subtotal,
+                'tax_amount' => $request->tax_amount,
+                'discount_amount' => $request->discount_amount,
                 'grand_total' => $request->grand_total,
-                // ... totals
+                'status' => 'completed'
             ]);
 
             // 2. Save Items using the relationship
-            $sale->items()->createMany($request->items);
+            foreach ($request->items as $item) {
+                $stock = Stock::where('branch_id', $request->branch_id)
+                 ->where('product_id', $item['product_id'])
+                 ->first();
+
+                $sale->items()->create([
+                    'product_id' => $item['product_id'],
+                    'quantity' => $item['quantity'],
+                    'sale_price' => $item['price'],
+                    'purchase_price' => $stock->purchase_price,
+                    'discount_amount' => $item['discount_amount'],
+                    'total_price' => $item['total_price'],
+                ]);
+            }
 
             // 3. Save Payments using the relationship
             $sale->payments()->createMany($request->payments);
@@ -85,11 +101,12 @@ class SaleController extends Controller
             ->map(function ($sale) {
                 return [
                     'id' => $sale->id,
-                    'invoice_no' => $sale->invoice_no,
+                    'invoice_number' => $sale->invoice_number,
                     'branch' => $sale->branch->name,
                     'customer' => $sale->customer->name ?? 'Guest',
-                    'total' => $sale->total_amount,
+                    'grand_total' => $sale->grand_total,
                     'time' => $sale->created_at->diffForHumans(),
+                    'payments' => $sale->payments,
                 ];
             });
     }

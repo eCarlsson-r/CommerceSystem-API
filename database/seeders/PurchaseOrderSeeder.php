@@ -7,6 +7,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\Supplier;
 use App\Models\Product;
+use App\Models\Branch;
 use Illuminate\Support\Str;
 
 class PurchaseOrderSeeder extends Seeder
@@ -15,8 +16,9 @@ class PurchaseOrderSeeder extends Seeder
     {
         $suppliers = Supplier::all();
         $products = Product::all();
+        $branches = Branch::all();
 
-        if ($suppliers->isEmpty() || $products->isEmpty()) return;
+        if ($suppliers->isEmpty() || $products->isEmpty() || $branches->isEmpty()) return;
 
         for ($i = 0; $i < 5; $i++) {
             $totalAmount = 0;
@@ -42,6 +44,7 @@ class PurchaseOrderSeeder extends Seeder
             $po = PurchaseOrder::create([
                 'order_number' => 'PO-' . strtoupper(Str::random(6)),
                 'supplier_id' => $suppliers->random()->id,
+                'branch_id' => $branches->random()->id,
                 'order_date' => now()->subDays(rand(1, 10)),
                 'expected_date' => now()->addDays(rand(5, 15)),
                 'total_amount' => $totalAmount,

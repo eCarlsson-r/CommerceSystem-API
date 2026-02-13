@@ -48,14 +48,17 @@ class SaleSeeder extends Seeder
                 for ($j = 0; $j < $itemsCount; $j++) {
                     $product = $products->random();
                     $qty = rand(1, 5);
-                    $price = rand(20000, 35000);
-                    $total = $qty * $price;
+                    $salePrice = rand(20000, 35000);
+                    $purchasePrice = rand(5000, 15000);
+                    $total = $qty * $salePrice;
 
                     SaleItem::create([
                         'sale_id' => $sale->id,
                         'product_id' => $product->id,
                         'quantity' => $qty,
-                        'unit_price' => $price,
+                        'sale_price' => $salePrice,
+                        'purchase_price' => $purchasePrice,
+                        'discount_amount' => 0,
                         'total_price' => $total,
                     ]);
 

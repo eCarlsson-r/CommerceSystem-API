@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\PurchaseReturn;
 use App\Models\PurchaseReturnItem;
 use App\Models\PurchaseOrder;
+use App\Models\User;
 use Illuminate\Support\Str;
 
 class PurchaseReturnSeeder extends Seeder
@@ -13,14 +14,17 @@ class PurchaseReturnSeeder extends Seeder
     public function run(): void
     {
         $pos = PurchaseOrder::with('items')->where('status', 'completed')->get();
+        $users = User::all();
 
-        if ($pos->isEmpty()) return;
+        if ($pos->isEmpty() || $users->isEmpty()) return;
 
         foreach ($pos->take(3) as $po) {
             $return = PurchaseReturn::create([
                 'return_number' => 'RET-' . strtoupper(Str::random(6)),
                 'purchase_order_id' => $po->id,
+                'user_id' => $users->random()->id,
                 'return_date' => now()->subDays(rand(1, 5)),
+                'reason' => collect(['Damaged items', 'Wrong product', 'Overstocked'])->random(),
                 'total_amount' => 0, // Will update
                 'status' => 'completed',
             ]);

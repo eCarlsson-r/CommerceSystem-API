@@ -18,20 +18,11 @@ use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\EcommerceController;
 
-// Public Routes (For Next.js eCommerce)
-Route::prefix('v1/shop')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    })->middleware('auth:sanctum');
-    Route::get('/products', [ProductController::class, 'index']);
-    Route::get('/products/{slug}', [ProductController::class, 'show']);
-});
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/subscribe', [AuthController::class, 'subscribe']);
+Route::post('/register', [AuthController::class, 'register']);
 
-Route::prefix('v1/admin')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-});
-// Private Routes (For Angular Admin/POS)
-Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
+Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
@@ -59,4 +50,6 @@ Route::middleware('auth:sanctum')->prefix('v1/admin')->group(function () {
     Route::get('/reports/inventory-matrix', [ReportController::class, 'inventoryMatrix']);
     Route::get('/reports/daily-closing', [ReportController::class, 'dailyClosing']);
     Route::get('/reports/stock-audit', [ReportController::class, 'stockAudit']);
+    Route::get('/reports/sales-report', [ReportController::class, 'salesReport']);
+    Route::get('/reports/purchase-report', [ReportController::class, 'purchaseReport']);
 });
