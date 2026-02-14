@@ -14,9 +14,16 @@ use App\Models\Stock;
 use App\Models\User;
 use App\Models\Employee;
 use App\Notifications\StockTransferRequest;
+use App\Services\StockService;
 
 class StockTransferController extends Controller
 {
+    protected $stockService;
+
+    public function __construct(StockService $stockService) {
+        $this->stockService = $stockService;
+    }
+
     public function index()
     {
         $transfers = StockTransfer::with('items')->latest()->paginate(10);
@@ -55,24 +62,25 @@ class StockTransferController extends Controller
             $transfer->update(['status' => 'R']);
 
             foreach ($transfer->items as $item) {
+                $this->stockService->decrease(
+                    $transfer->from_branch_id, 
+                    $item->product_id, 
+                    $item->quantity, 
+                    'TRF-'.$transfer->id,
+                    'TRANSFER'
+                );
+
+                $this->stockService->increase(
+                    $transfer->to_branch_id, 
+                    $item->product_id, 
+                    $item->quantity, 
+                    'TRF-'.$transfer->id,
+                    'TRANSFER'
+                );
+                
                 $stock = Stock::where('branch_id', $transfer->to_branch_id)
                             ->where('product_id', $item->product_id)
                             ->first();
-                            
-                // Example logic when receiving a transfer
-                $newBalance = $stock->quantity + $item->quantity;
-
-                $stock->logs()->create([
-                    'reference_id' => $transfer->id,
-                    'type' => 'transfer',
-                    'description' => "Received from Branch: " . $transfer->fromBranch->name,
-                    'quantity_change' => $item->quantity,
-                    'balance_after' => $newBalance,
-                    'user_id' => auth()->id()
-                ]);
-
-                $stock->increment('quantity', $item->quantity);
-
                 broadcast(new InventoryUpdated($stock))->toOthers();
             }
         });

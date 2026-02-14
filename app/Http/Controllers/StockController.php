@@ -39,6 +39,12 @@ class StockController extends Controller
         return response()->json($stock);
     }
 
+    public function show($id)
+    {
+        $stock = Stock::findOrFail($id);
+        return response()->json($stock->logs()->get());
+    }
+
     public function update(Request $request, $id)
     {
         $stock = Stock::findOrFail($id);

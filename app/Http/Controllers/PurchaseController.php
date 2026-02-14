@@ -20,7 +20,7 @@ class PurchaseController extends Controller
      */
     public function index()
     {
-        return PurchaseOrder::with('items', 'supplier', 'branch')->where('status', 'pending')->get();
+        return PurchaseOrder::with('items.product', 'supplier', 'branch')->where('status', 'pending')->get();
     }
 
     /**
@@ -39,19 +39,7 @@ class PurchaseController extends Controller
                 'order_number' => 'PO-' . strtoupper(Str::random(8))
             ]);
 
-            foreach ($request->items as $item) {
-                // 2. Link items to the PO
-                $purchase->items()->create($item);
-
-                // 3. Use your StockService to increase inventory
-                // This will automatically create the 'PURCHASE' StockLog entry
-                $this->stockService->increase(
-                    $request->branch_id, 
-                    $item['product_id'], 
-                    $item['quantity'],
-                    $purchase->order_number
-                );
-            }
+            $purchase->items()->createMany($request->items);
 
             return response()->json(['message' => 'Stock updated successfully']);
         });
@@ -70,7 +58,21 @@ class PurchaseController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $purchase = PurchaseOrder::findOrFail($id);
+        $purchase->update([
+            'status' => $request->status,
+        ]);
+
+        foreach ($purchase->items as $item) {
+            // 3. Use your StockService to increase inventory
+            // This will automatically create the 'PURCHASE' StockLog entry
+            $this->stockService->increase(
+                $purchase->branch_id, 
+                $item->product_id, 
+                $item->quantity,
+                $purchase->order_number
+            );
+        }
     }
 
     /**

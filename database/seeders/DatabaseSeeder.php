@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             StockTransferSeeder::class,
             PurchaseReturnSeeder::class,
             StockLogSeeder::class,
+            CartSeeder::class,
+            OrderSeeder::class,
         ]);
 
         Settings::updateOrCreate(

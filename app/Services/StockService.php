@@ -11,7 +11,7 @@ class StockService
     /**
      * Decrease stock for a specific branch and record the movement.
      */
-    public function decrease(int $branchId, int $productId, int $quantity, string $reference = 'SALE')
+    public function decrease(int $branchId, int $productId, int $quantity, string $referenceId, string $type = 'SALE')
     {
         // 1. Locate the specific branch's stock record
         $stock = Stock::where('branch_id', $branchId)
@@ -43,7 +43,6 @@ class StockService
         ]);
     }
 
-    // Inside your StockService.php
     public function recordPurchase(int $productId, int $branchId, int $quantity, float $purchasePrice)
     {
         return DB::transaction(function () use ($productId, $branchId, $quantity, $purchasePrice) {

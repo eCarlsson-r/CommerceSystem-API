@@ -20,6 +20,8 @@ class Sale extends Model {
         'branch_id',
         'employee_id',
         'customer_id',
+        'manual_discount',
+        'applied_points',
         'subtotal',
         'tax_amount',
         'discount_amount',
@@ -32,6 +34,8 @@ class Sale extends Model {
     protected $casts = [
         'subtotal' => 'integer',
         'tax_amount' => 'integer',
+        'manual_discount' => 'integer',
+        'applied_points' => 'integer',
         'discount_amount' => 'integer',
         'grand_total' => 'integer',
     ];

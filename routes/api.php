@@ -16,7 +16,7 @@ use App\Http\Controllers\StockTransferController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\EcommerceController;
+use App\Http\Controllers\OrderController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/subscribe', [AuthController::class, 'subscribe']);
@@ -43,9 +43,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('stocks', StockController::class);
     Route::get('/sales/recent', [SaleController::class, 'recent']);
     Route::apiResource('sales', SaleController::class);
-    Route::get('orders', [EcommerceController::class, 'index']);
-    Route::patch('orders/{id}/status', [EcommerceController::class, 'updateStatus']);
-    Route::post('orders/{id}/assign', [EcommerceController::class, 'assignToBranch']);
+    Route::get('/orders', [OrderController::class, 'index']);
+    Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/orders/{id}/assign', [OrderController::class, 'assignToBranch']);
+    Route::post('/orders/{id}/finalize', [OrderController::class, 'finalizeShipment']);
+    Route::post('/ecommerce/checkout', [OrderController::class, 'checkout']);
+    Route::get('/ecommerce/my-orders', [OrderController::class, 'myOrders']);
     Route::get('/reports/financial-overview', [ReportController::class, 'financialOverview']);
     Route::get('/reports/inventory-matrix', [ReportController::class, 'inventoryMatrix']);
     Route::get('/reports/daily-closing', [ReportController::class, 'dailyClosing']);

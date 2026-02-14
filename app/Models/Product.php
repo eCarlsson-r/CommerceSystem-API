@@ -6,7 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['sku', 'name', 'description', 'category_id'];
+    protected $fillable = ['sku', 'name', 'description', 'category_id', 'base_price', 'min_stock_alert'];
+
+    protected $casts = [
+        'base_price' => 'decimal:2',
+        'min_stock_alert' => 'integer',
+    ];
+
+    protected $guarded = ['id'];
 
     // Accessor for eCommerce to show "Out of Stock"
     protected $appends = ['is_available'];

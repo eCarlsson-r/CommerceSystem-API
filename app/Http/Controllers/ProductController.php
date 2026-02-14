@@ -26,6 +26,14 @@ class ProductController extends Controller
             });
         }
 
+        if ($request->has('search')) {
+            $search = $request->search;
+            $products->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                      ->orWhere('sku', 'like', "%{$search}%");
+            });
+        }
+
         return response()->json($products->get());
     }
 
@@ -62,17 +70,47 @@ class ProductController extends Controller
                 ]);
             }
 
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file) {
+                    $path = $file->store('products/gallery', 'public');
+                    $product->media()->create([
+                        'file_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'size' => $file->getSize(),
+                        'disk' => 'public',
+                        'path' => $path
+                    ]);
+                }
+            }
+
             return new ProductResource($product->load('media'));
         });
     }
 
     public function update(Request $request, Product $product) {
-        $product->update($request->all());
+        return DB::transaction(function () use ($request, $product) {
+            $product->update($request->all());
 
-        // Instant update for POS and eCommerce
-        broadcast(new ProductUpdated($product))->toOthers();
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $file) {
+                    $path = $file->store('products/gallery', 'public');
+                    $product->media()->create([
+                        'file_name' => $file->getClientOriginalName(),
+                        'mime_type' => $file->getClientMimeType(),
+                        'extension' => $file->getClientOriginalExtension(),
+                        'size' => $file->getSize(),
+                        'disk' => 'public',
+                        'path' => $path
+                    ]);
+                }
+            }
 
-        return response()->json($product);
+            // Instant update for POS and eCommerce
+            broadcast(new ProductUpdated($product))->toOthers();
+
+            return new ProductResource($product->load('media'));
+        });
     }
 
     public function destroy(Product $product)
