@@ -17,7 +17,9 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\BannerController;
 
+Route::get('/banners', [BannerController::class, 'publicIndex']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/subscribe', [AuthController::class, 'subscribe']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -43,11 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('stocks', StockController::class);
     Route::get('/sales/recent', [SaleController::class, 'recent']);
     Route::apiResource('sales', SaleController::class);
-    Route::get('/orders', [OrderController::class, 'index']);
-    Route::patch('/orders/{id}/status', [OrderController::class, 'updateStatus']);
-    Route::post('/orders', [OrderController::class, 'store']);
-    Route::get('/orders/{id}/assign', [OrderController::class, 'assignToBranch']);
-    Route::post('/orders/{id}/finalize', [OrderController::class, 'finalizeShipment']);
+    Route::apiResource('orders', OrderController::class);
+    Route::apiResource('banners', BannerController::class);
     Route::post('/ecommerce/checkout', [OrderController::class, 'checkout']);
     Route::get('/ecommerce/my-orders', [OrderController::class, 'myOrders']);
     Route::get('/reports/financial-overview', [ReportController::class, 'financialOverview']);

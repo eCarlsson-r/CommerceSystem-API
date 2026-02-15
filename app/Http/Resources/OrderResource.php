@@ -13,17 +13,23 @@ class OrderResource extends JsonResource
      * @return array<string, mixed>
      */
     public function toArray($request) {
+        $addressItems = preg_split('/\R/', $this->shipping_address);
+        $address = $addressItems[0];
+        $addressItems = explode(', ', $addressItems[1]);
+        $city = $addressItems[0];
+        $postal = $addressItems[1];
         return [
             'order_id' => $this->id,
+            'order_number' => $this->order_number,
             'status' => $this->status,
-            'shipping_address' => $this->address,
+            'branch' => $this->branch,
+            'customer' => $this->customer,
+            'shipping_address' => $address,
+            'shipping_city' => $city,
+            'shipping_postal' => $postal,
             'tracking_number' => $this->tracking_no,
-            'items' => $this->items->map(fn($item) => [
-                'name' => $item->product->name,
-                'image' => $item->product->image_url,
-                'price' => $item->unit_price,
-                'quantity' => $item->quantity
-            ]),
+            'courier_service' => $this->courier_service,
+            'items' => $this->items,
             'grand_total' => $this->grand_total
         ];
     }
