@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Stock;
+use App\Models\StockLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StockController extends Controller
 {
@@ -14,8 +16,8 @@ class StockController extends Controller
             $query->where('branch_id', $request->branch_id);
         } else if ($request->has('scoped_branch_id')) {
             $query->where('branch_id', $request->scoped_branch_id);
-        } 
-        
+        }
+
         if ($request->has('category_id') && $request->category_id > 0) {
             $query->whereHas('product', function ($q) use ($request) {
                 $q->where('category_id', $request->category_id);
@@ -64,16 +66,16 @@ class StockController extends Controller
     public function receiveTransfer($id) {
         return DB::transaction(function () use ($id) {
             $transfer = StockTransfer::findOrFail($id);
-            
+
             foreach ($transfer->items as $item) {
                 $this->stockService->increase(
-                    $transfer->to_branch_id, 
-                    $item->product_id, 
+                    $transfer->to_branch_id,
+                    $item->product_id,
                     $item->quantity,
                     'TRANSFER_IN'
                 );
             }
-            
+
             $transfer->update(['status' => 'R']);
         });
     }

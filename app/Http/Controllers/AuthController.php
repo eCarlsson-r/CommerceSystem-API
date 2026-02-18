@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Employee;
@@ -17,12 +18,12 @@ class AuthController extends Controller
         $user = User::where('username', $request->username)->first();
 
         if (auth()->attempt($credentials)) {
-            if ($request->header('Origin') === env('STORE_URL') && $user->role == 'CUSTOMER') {
+            if ($request->header('Origin') === env('STORE_URL') && $user->role == 'customer') {
                 $customer = Customer::where('user_id', $user->id)->first();
                 $token = auth()->user()->createToken('web-token')->plainTextToken;
                 if ($customer) $user->customer = $customer;
                 return response()->json(['data' => $user, 'token' => $token], 200);
-            } else if ($request->header('Origin') === env('POS_URL') && $user->role != 'CUSTOMER') {
+            } else if ($request->header('Origin') === env('POS_URL') && $user->role != 'customer') {
                 $employee = Employee::where('user_id', $user->id)->first();
                 $token = auth()->user()->createToken('admin-token')->plainTextToken;
                 if ($employee) $user->employee = $employee;

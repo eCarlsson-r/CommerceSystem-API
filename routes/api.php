@@ -19,15 +19,20 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BannerController;
 
-Route::get('/banners', [BannerController::class, 'publicIndex']);
+Route::get('/ecommerce/banners', [BannerController::class, 'publicIndex']);
+Route::get('/ecommerce/products', [ProductController::class, 'getProducts']);
+Route::get('/ecommerce/categories', [CategoryController::class, 'index']);
+Route::get('/ecommerce/categories/{slug}/products', [CategoryController::class, 'products']);
+Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/subscribe', [AuthController::class, 'subscribe']);
 Route::post('/register', [AuthController::class, 'register']);
 
+Route::get('/user', function (Request $request) {
+    return $request->user();
+});
+
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
     Route::apiResource('settings', SettingsController::class);
     Route::apiResource('branches', BranchController::class);
     Route::get('/customers/{id}/history', [CustomerController::class, 'history']);

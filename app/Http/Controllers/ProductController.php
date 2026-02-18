@@ -8,6 +8,7 @@ use App\Models\Branch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductCardResource;
 use App\Events\ProductUpdated;
 
 class ProductController extends Controller
@@ -131,5 +132,64 @@ class ProductController extends Controller
         }
 
         return response()->json($query->get());
+    }
+
+    public function getProducts(Request $request)
+    {
+        $limit = $request->get('limit', 12);
+        $filter = $request->get('filter'); // best-seller, new-arrival
+
+        $query = Stock::with(['product.media', 'product.category', 'logs'])
+            ->where('quantity', '>', 0);
+
+        // 1. Contextual Filters (Best Seller / New Arrival)
+        if ($filter === 'best-seller') {
+            $query->withCount(['logs' => function($q) {
+                $q->where('type', 'OUT')->where('created_at', '>=', now()->subDays(30));
+            }])->orderBy('logs_count', 'desc');
+        } elseif ($filter === 'new-arrival') {
+            $query->latest();
+        }
+
+        // 2. User-Driven Filters (Sidebar & Search)
+        if ($request->filled('category')) {
+            $query->whereHas('product.category', function($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        $minBound = Stock::where('quantity', '>', 0)->min('sale_price') ?? 0;
+        $maxBound = Stock::where('quantity', '>', 0)->max('sale_price') ?? 10000000;
+
+        if ($request->filled('min_price')) {
+            $query->where('sale_price', '>=', $request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('sale_price', '<=', $request->max_price);
+        }
+
+        if ($request->filled('search')) {
+            $query->whereHas('product', function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                ->orWhere('sku', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // 3. Execution & Uniqueness
+        // We fetch a bit more than the limit to ensure unique product_id after grouping
+        $stocks = $query->take($limit * 3)->get();
+
+        $products = $stocks->unique('product_id')
+            ->take($limit)
+            ->map(function($stock) {
+                return new ProductCardResource($stock);
+            });
+
+        return response()->json([
+            'products' => $products->values(),
+            'min_price' => $minBound,
+            'max_price' => $maxBound,
+        ]);
     }
 }
