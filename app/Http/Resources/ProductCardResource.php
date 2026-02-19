@@ -9,7 +9,6 @@ class ProductCardResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        // $this is now a Product model
         return [
             'id' => $this->product->id,
             'name' => $this->product->name,

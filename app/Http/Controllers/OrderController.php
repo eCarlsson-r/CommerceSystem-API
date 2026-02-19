@@ -29,7 +29,41 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        DB::beginTransaction();
+        try {
+            $order = Order::create([
+                'user_id' => auth()->id(),
+                'total_price' => $request->total,
+                'status' => 'PENDING',
+                'type' => $request->type, // shipping or pickup
+                'branch_name' => $request->details['branch_name'] ?? 'Main Warehouse',
+            ]);
+
+            foreach ($request->items as $item) {
+                // Find the stock for this specific product
+                $stock = Stock::where('product_id', $item['id'])->first();
+
+                if ($stock->quantity < $item['quantity']) {
+                    throw new \Exception("Insufficient stock for {$item['name']}");
+                }
+
+                // Record the Stock Log
+                $stock->logs()->create([
+                    'quantity_change' => $item['quantity'],
+                    'type' => 'OUT',
+                    'description' => "E-commerce Order #{$order->id}"
+                ]);
+
+                $stock->decrement('quantity', $item['quantity']);
+            }
+
+            DB::commit();
+            return response()->json(['order_id' => $order->id], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
     /**
@@ -94,11 +128,11 @@ class OrderController extends Controller
                      $stock = Stock::where('branch_id', $request->branch_id)
                                  ->where('product_id', $item->product_id)
                                  ->first();
-                     
+
                      if (!$stock || $stock->quantity < $item->quantity) {
                          throw new \Exception("Insufficient stock at this branch.");
                      }
- 
+
                      $sale->items()->create([
                          'product_id' => $item->product_id,
                          'quantity' => $item->quantity,
@@ -106,9 +140,9 @@ class OrderController extends Controller
                          'purchase_price' => $stock->purchase_price,
                          'total_price' => $item->total_price
                      ]);
- 
+
                      $stock->decrement('quantity', $item->quantity);
-                     
+
                      StockLog::create([
                          'stock_id' => $stock->id,
                          'type' => 'sale',

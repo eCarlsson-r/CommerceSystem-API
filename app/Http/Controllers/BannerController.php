@@ -20,20 +20,22 @@ class BannerController extends Controller
     public function publicIndex() {
         // Only fetch active banners, ordered by priority
         return Banner::where('is_active', true)
+                    ->with('media')
                     ->orderBy('order_priority', 'asc')
                     ->get()
                     ->map(fn($b) => [
                         'id' => $b->id,
-                        'image' => asset('storage/' . $b->image_path),
+                        'image_url' => $b->media?->url ?? null,
                         'url' => $b->link_url,
-                        'title' => $b->title
+                        'title' => $b->title,
+                        'description' => $b->description ?? ''
                     ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request) 
+    public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {
             $validated = $request->validate([

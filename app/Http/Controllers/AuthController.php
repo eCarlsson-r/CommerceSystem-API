@@ -60,9 +60,9 @@ class AuthController extends Controller
     {
         $user = User::find($request->input('user_id'));
         $user->updatePushSubscription(
-            $request->input('endpoint'), 
-            $request->input('public_key'), 
-            $request->input('auth_token'), 
+            $request->input('endpoint'),
+            $request->input('public_key'),
+            $request->input('auth_token'),
             $request->input('content_encoding')
         );
 
@@ -80,7 +80,7 @@ class AuthController extends Controller
             'user_id' => User::create([
                 'username' => $request->input('email'),
                 'password' => Hash::make($request->input('password')),
-                'type' => 'CUSTOMER'
+                'type' => 'customer'
             ])->id,
             'address' => $request->input('address'),
             'country' => $request->input('country'),

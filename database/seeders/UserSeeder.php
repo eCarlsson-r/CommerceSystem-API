@@ -17,24 +17,30 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Admin User
-        User::create([
-            'username' => 'admin',
-            'password' => Hash::make('password'),
-            'role' => 'admin'
-        ]);
+        User::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'password' => Hash::make('password'),
+                'role' => 'admin'
+            ]
+        );
 
         // Manager User
-        User::create([
-            'username' => 'manager',
-            'password' => Hash::make('password'),
-            'role' => 'manager'
-        ]);
+        User::updateOrCreate(
+            ['username' => 'manager'],
+            [
+                'password' => Hash::make('password'),
+                'role' => 'manager'
+            ]
+        );
 
         // Staff User
-        User::create([
-            'username' => 'staff',
-            'password' => Hash::make('password'),
-            'role' => 'staff'
-        ]);
+        User::updateOrCreate(
+            ['username' => 'staff'],
+            [
+                'password' => Hash::make('password'),
+                'role' => 'staff'
+            ]
+        );
     }
 }

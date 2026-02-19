@@ -38,7 +38,23 @@ class ProductController extends Controller
         return response()->json($products->get());
     }
 
-    public function store(Request $request) 
+    public function show($id)
+    {
+        $stock = Stock::with('product.category', 'product.media', 'logs')
+            ->whereHas('product', function($q) use ($id) {
+                $q->where('id', $id);
+            })
+            ->firstOrFail();
+        return response()->json([
+            'product' => new ProductCardResource($stock),
+            'stocks' => $stock->product->stocks->map(fn($s) => [
+                'branch_name' => $s->branch->name,
+                'quantity' => $s->quantity
+            ])
+        ]);
+    }
+
+    public function store(Request $request)
     {
         return DB::transaction(function () use ($request) {
             $validated = $request->validate([

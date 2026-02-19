@@ -18,6 +18,11 @@ class CustomerController extends Controller
         return response()->json(Customer::all());
     }
 
+    public function show($id)
+    {
+        return response()->json(Customer::findOrFail($id));
+    }
+
     /**
      * Store a newly created resource in storage.
      */

@@ -33,7 +33,7 @@ class StockLogSeeder extends Seeder
                 if ($stock) {
                     $newBalance = $stock->quantity; // Current quantity is already set by StockSeeder, but we should probably recalculate it.
                     // Actually, let's just create the log and we'll fix the Stock quantity at the end based on logs.
-                    
+
                     StockLog::create([
                         'stock_id' => $stock->id,
                         'reference_id' => $sale->invoice_number,
@@ -41,7 +41,7 @@ class StockLogSeeder extends Seeder
                         'description' => "Item sold via {$sale->invoice_number}",
                         'quantity_change' => -$item->quantity,
                         'balance_after' => 0, // Will update later
-                        'user_id' => $sale->employee_id,
+                        'user_id' => $adminUsers->random(),
                         'created_at' => $sale->date,
                         'updated_at' => $sale->date,
                     ]);
@@ -126,12 +126,12 @@ class StockLogSeeder extends Seeder
         // and leave balance_after as a simple running total if we were more motivated.
         // Let's just update the Stock quantities based on the sum of logs + initial seed?
         // Actually, StockSeeder already set an initial quantity. Let's treat that as 'initial' log.
-        
+
         $stocks = Stock::all();
         foreach ($stocks as $stock) {
             $logs = StockLog::where('stock_id', $stock->id)->orderBy('created_at')->get();
             $balance = 50; // Starting baseline for all products
-            
+
             // Prepend an 'adjustment' log for initial stock
             StockLog::create([
                 'stock_id' => $stock->id,

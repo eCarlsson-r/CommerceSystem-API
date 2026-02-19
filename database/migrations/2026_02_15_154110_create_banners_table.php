@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('banners', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->nullableMorphs('image');
             $table->string('link_url')->nullable(); // Redirect to a specific product or category
             $table->integer('order_priority')->default(0);
             $table->boolean('is_active')->default(true);
