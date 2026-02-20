@@ -48,7 +48,7 @@ class ProductController extends Controller
         return response()->json([
             'product' => new ProductCardResource($stock),
             'stocks' => $stock->product->stocks->map(fn($s) => [
-                'branch_name' => $s->branch->name,
+                'branch' => $s->branch,
                 'quantity' => $s->quantity
             ])
         ]);

@@ -29,6 +29,19 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
+        if ($request->type === 'pickup') {
+            foreach ($request->items as $item) {
+                $stock = Stock::find($item['stock_id']);
+
+                // Check if the stock actually belongs to the requested branch
+                if ($stock->branch_name !== $request->details['branch_name']) {
+                    return response()->json([
+                        'message' => "Item {$item['name']} is not available at {$request->details['branch_name']}."
+                    ], 422);
+                }
+            }
+        }
+
         DB::beginTransaction();
         try {
             $order = Order::create([
@@ -69,9 +82,14 @@ class OrderController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Order $order)
+    public function show($id)
     {
-        //
+        // Ensure the user can only see their own order
+        $order = Order::where('user_id', auth()->id())
+                    ->with(['items.product.media'])
+                    ->findOrFail($id);
+
+        return response()->json($order);
     }
 
     public function release(Request $request, $orderId) {

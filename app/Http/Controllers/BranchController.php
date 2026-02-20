@@ -15,6 +15,17 @@ class BranchController extends Controller
         return Branch::all();
     }
 
+    // app/Http/Controllers/Api/BranchController.php
+    public function publicIndex()
+    {
+        // Fetch unique branch names from your Stock table
+        return response()->json(
+            Branch::whereHas('stocks', function($q) {
+                $q->where('quantity', '>', 0);
+            })->get(['id', 'name', 'address', 'phone', 'hours'])
+        );
+    }
+
     /**
      * Store a newly created resource in storage.
      */

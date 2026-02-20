@@ -19,20 +19,23 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BannerController;
 
-Route::get('/ecommerce/banners', [BannerController::class, 'publicIndex']);
-Route::get('/ecommerce/products', [ProductController::class, 'getProducts']);
-Route::get('/ecommerce/products/{id}', [ProductController::class, 'show']);
-Route::get('/ecommerce/categories', [CategoryController::class, 'index']);
-Route::get('/ecommerce/categories/{slug}/products', [CategoryController::class, 'products']);
+// routes/api.php
+Route::prefix('ecommerce')->group(function () {
+    Route::get('/branches', [BranchController::class, 'publicIndex']);
+    Route::get('/banners', [BannerController::class, 'publicIndex']);
+    Route::get('/products', [ProductController::class, 'getProducts']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+    Route::get('/categories', [CategoryController::class, 'index']);
+    Route::get('/categories/{slug}/products', [CategoryController::class, 'products']);
+});
+
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/subscribe', [AuthController::class, 'subscribe']);
 Route::post('/register', [AuthController::class, 'register']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
+    Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('settings', SettingsController::class);
@@ -54,12 +57,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('sales', SaleController::class);
     Route::apiResource('orders', OrderController::class);
     Route::apiResource('banners', BannerController::class);
-    Route::post('/ecommerce/checkout', [OrderController::class, 'checkout']);
-    Route::get('/ecommerce/my-orders', [OrderController::class, 'myOrders']);
     Route::get('/reports/financial-overview', [ReportController::class, 'financialOverview']);
     Route::get('/reports/inventory-matrix', [ReportController::class, 'inventoryMatrix']);
     Route::get('/reports/daily-closing', [ReportController::class, 'dailyClosing']);
     Route::get('/reports/stock-audit', [ReportController::class, 'stockAudit']);
     Route::get('/reports/sales-report', [ReportController::class, 'salesReport']);
     Route::get('/reports/purchase-report', [ReportController::class, 'purchaseReport']);
+
+    Route::prefix('ecommerce')->group(function () {
+        Route::post('/checkout', [OrderController::class, 'checkout']);
+        Route::get('/my-orders', [OrderController::class, 'myOrders']);
+        Route::get('/branches', [BranchController::class, 'index']);
+        Route::get('/orders/{id}', [OrderController::class, 'show']);
+    });
 });

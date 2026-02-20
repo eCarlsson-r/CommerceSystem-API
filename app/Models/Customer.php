@@ -15,6 +15,11 @@ class Customer extends Model
         return $this->hasMany(Sale::class);
     }
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
     public function user()
     {
         return $this->hasOne(User::class);
