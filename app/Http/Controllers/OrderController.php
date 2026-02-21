@@ -8,10 +8,16 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Stock;
 use App\Models\StockLog;
 use App\Models\Sale;
+use App\Services\StockService; // Import your new service
 use App\Http\Resources\OrderResource;
 
 class OrderController extends Controller
 {
+    protected $stockService;
+
+    public function __construct(StockService $stockService) {
+        $this->stockService = $stockService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -24,6 +30,10 @@ class OrderController extends Controller
         return Order::with('items.product', 'customer')->where('status', $request->status)->get();
     }
 
+    public function myOrders(Request $request) {
+        return Order::with('items.product', 'branch')->where('customer_id', $request->user()->customer->id)->get();
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -31,43 +41,49 @@ class OrderController extends Controller
     {
         if ($request->type === 'pickup') {
             foreach ($request->items as $item) {
-                $stock = Stock::find($item['stock_id']);
+                $stock = Stock::where('product_id', $item['id'])->where('branch_id', $item['branch']['id'])->first();
 
                 // Check if the stock actually belongs to the requested branch
-                if ($stock->branch_name !== $request->details['branch_name']) {
+                if ($stock->branch_id !== $request->delivery_details['pickup_branch']) {
                     return response()->json([
-                        'message' => "Item {$item['name']} is not available at {$request->details['branch_name']}."
+                        'message' => "Item {$item['name']} is not available."
                     ], 422);
                 }
             }
         }
 
+        $invoice_number = 'INV-' . time();
+
         DB::beginTransaction();
         try {
             $order = Order::create([
-                'user_id' => auth()->id(),
-                'total_price' => $request->total,
-                'status' => 'PENDING',
+                'customer_id' => auth()->user()->customer->id,
+                'order_number' => $invoice_number,
+                'total_amount' => $request->total,
+                'status' => 'pending',
                 'type' => $request->type, // shipping or pickup
-                'branch_name' => $request->details['branch_name'] ?? 'Main Warehouse',
+                'shipping_address' => $request->type === 'shipping' ? $request->delivery_details['address'] : null,
+                'courier_service' => $request->type === 'shipping' ? $request->delivery_details['courier_service'] : null,
+                'branch_id' => $request->delivery_details['pickup_branch'] ?? null,
             ]);
 
+            $order->items()->createMany(array_map(function ($item) {
+                return [
+                    'product_id' => $item['id'],
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $item['price'],
+                    'total_price' => $item['price'] * $item['quantity']
+                ];
+            }, $request->items));
+
             foreach ($request->items as $item) {
-                // Find the stock for this specific product
-                $stock = Stock::where('product_id', $item['id'])->first();
-
-                if ($stock->quantity < $item['quantity']) {
-                    throw new \Exception("Insufficient stock for {$item['name']}");
-                }
-
-                // Record the Stock Log
-                $stock->logs()->create([
-                    'quantity_change' => $item['quantity'],
-                    'type' => 'OUT',
-                    'description' => "E-commerce Order #{$order->id}"
-                ]);
-
-                $stock->decrement('quantity', $item['quantity']);
+                $this->stockService->decrease(
+                    $item['branch']['id'],
+                    $item['id'],
+                    $item['quantity'],
+                    $invoice_number,
+                    'SALE'
+                );
             }
 
             DB::commit();
@@ -85,8 +101,8 @@ class OrderController extends Controller
     public function show($id)
     {
         // Ensure the user can only see their own order
-        $order = Order::where('user_id', auth()->id())
-                    ->with(['items.product.media'])
+        $order = Order::where('customer_id', auth()->user()->customer->id)
+                    ->with(['branch', 'items.product.media'])
                     ->findOrFail($id);
 
         return response()->json($order);

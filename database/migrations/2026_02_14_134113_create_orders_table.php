@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('branch_id')->nullable()->constrained();
             $table->foreignId('customer_id')->constrained();
             $table->string('order_number')->unique(); // e.g., WEB-2026-001
             $table->enum('status', ['pending', 'paid', 'processing', 'shipped', 'cancelled']);
             $table->decimal('total_amount', 15, 2);
-            $table->text('shipping_address');
-            $table->string('courier_service'); // JNE, J&T, etc.
+            $table->text('shipping_address')->nullable();
+            $table->string('courier_service')->nullable(); // JNE, J&T, etc.
             $table->string('tracking_number')->nullable();
             $table->text('note')->nullable();
             $table->foreignId('sale_id')->nullable()->constrained(); // Links to sales table once finalized

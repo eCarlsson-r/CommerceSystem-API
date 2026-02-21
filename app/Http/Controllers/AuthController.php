@@ -44,7 +44,7 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         if ($request->header('Origin') === env('STORE_URL') && $request->user()->role == 'customer') {
-            return $request->user()->load('customer', 'customer.orders', 'customer.orders.items.product.media', 'customer.orders.items.stock');
+            return $request->user()->load('customer');
         } else if ($request->header('Origin') === env('POS_URL') && $request->user()->role != 'customer') {
             return $request->user()->load('employee');
         }

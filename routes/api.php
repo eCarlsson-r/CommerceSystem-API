@@ -18,6 +18,7 @@ use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\CartController;
 
 // routes/api.php
 Route::prefix('ecommerce')->group(function () {
@@ -27,6 +28,8 @@ Route::prefix('ecommerce')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{slug}/products', [CategoryController::class, 'products']);
+    Route::get('/cart', [CartController::class, 'index']);
+    Route::post('/cart', [CartController::class, 'store']);
 });
 
 Route::post('/login', [AuthController::class, 'login']);

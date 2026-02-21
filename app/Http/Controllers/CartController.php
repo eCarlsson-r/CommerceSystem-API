@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cart;
+use App\Models\Stock;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class CartController extends Controller
@@ -10,17 +12,25 @@ class CartController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
+        $user = $request->user()->load('customer');
+        $localItems = $request->input('items', []); // Items from LocalStorage
 
-    public function syncCart(Request $request) {
-        // Validates stock at the 'Medan Main' branch before allowing add
-        $stock = Stock::where('branch_id', 1)->where('product_id', $request->id)->first();
-        if($stock->quantity < $request->qty) return response()->json(['error' => 'Stock Habis'], 422);
-        
-        // Update logic...
+        foreach ($localItems as $item) {
+            // Update or Create: If item from that branch exists, update quantity, else create
+            Cart::updateOrCreate(
+                [
+                    'customer_id' => $user->customer->id,
+                    'product_id' => $item['id'],
+                    'branch_id' => $item['branch_id'],
+                ],
+                ['quantity' => $item['quantity']]
+            );
+        }
+
+        // Return the full merged cart from DB
+        return response()->json($user->cartItems()->with('product')->get());
     }
 
     /**
@@ -28,11 +38,8 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
-        //
-    }
-
-    public function addToCart(Request $request) {
-        $stock = Stock::where('branch_id', $request->preferred_branch)
+        $user = $request->user()->load('customer');
+        $stock = Stock::where('branch_id', $request->branch_id)
                     ->where('product_id', $request->product_id)
                     ->first();
 
@@ -41,13 +48,16 @@ class CartController extends Controller
         }
 
         // Update or create cart record
-        Cart::updateOrCreate([
-            'customer_id' => $request->customer_id,
-            'product_id' => $request->product_id,
-            'quantity' => $request->quantity
-        ]);
+        Cart::updateOrCreate(
+            [
+                'customer_id' => $user->customer->id,
+                'product_id' => $request->product_id,
+                'branch_id' => $request->branch_id
+            ],
+            ['quantity' => $request->quantity]
+        );
 
-        return response()->json(['message' => 'Item added to cart']);
+        return response()->json(['message' => 'Item added to cart', 'cart' => $user->cartItems()->with('product')->get()]);
     }
 
     /**
