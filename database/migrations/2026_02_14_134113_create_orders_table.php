@@ -21,6 +21,7 @@ return new class extends Migration
             $table->text('shipping_address')->nullable();
             $table->string('courier_service')->nullable(); // JNE, J&T, etc.
             $table->string('tracking_number')->nullable();
+            $table->timestamp('shipped_at')->nullable();
             $table->text('note')->nullable();
             $table->foreignId('sale_id')->nullable()->constrained(); // Links to sales table once finalized
             $table->timestamps();

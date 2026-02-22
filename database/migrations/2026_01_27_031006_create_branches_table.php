@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name', 50);
             $table->string('address', 250);
             $table->string('phone', 20);
-            $table->nullableMorphs('image');
             $table->timestamps();
         });
     }

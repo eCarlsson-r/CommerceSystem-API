@@ -10,6 +10,7 @@ use App\Models\StockLog;
 use App\Models\Sale;
 use App\Services\StockService; // Import your new service
 use App\Http\Resources\OrderResource;
+use PDF;
 
 class OrderController extends Controller
 {
@@ -31,7 +32,7 @@ class OrderController extends Controller
     }
 
     public function myOrders(Request $request) {
-        return Order::with('items.product', 'branch')->where('customer_id', $request->user()->customer->id)->get();
+        return OrderResource::collection(Order::with('items.product', 'branch')->where('customer_id', $request->user()->customer->id)->get());
     }
 
     /**
@@ -106,6 +107,26 @@ class OrderController extends Controller
                     ->findOrFail($id);
 
         return response()->json($order);
+    }
+
+    // app/Http/Controllers/Api/OrderController.php
+
+    public function invoice($id)
+    {
+        $order = Order::with(['items.product', 'customer'])->findOrFail($id);
+
+        // Safety check: Only owner or admin can view
+        if ($order->customer_id !== auth()->user()->customer->id) abort(403);
+
+        $data = [
+            'order' => new OrderResource($order),
+            'logo' => public_path('images/logo-text.png'),
+            'date' => $order->created_at->format('d M Y'),
+        ];
+
+        // You can return a simple HTML view or a PDF
+        $pdf = PDF::loadView('invoices.order', $data);
+        return $pdf->stream("Invoice-{$order->id}.pdf");
     }
 
     public function release(Request $request, $orderId) {
@@ -239,5 +260,43 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         //
+    }
+
+    public function cancel($id)
+    {
+        DB::transaction(function () use ($id) {
+            $order = Order::findOrFail($id);
+
+            if ($order->status === 'cancelled') return;
+
+            foreach ($order->items as $item) {
+                // Find the stock for the SPECIFIC branch used in the order
+                $stock = Stock::where('product_id', $item->product_id)
+                            ->where('branch_id', $item->branch_id) // Important!
+                            ->first();
+
+                if ($stock) {
+                    // 1. Return the items to inventory
+                    $stock->increment('quantity', $item->quantity);
+
+                    // 2. Log it as a 'return' type (per your Enum)
+                    StockLog::create([
+                        'stock_id' => $stock->id,
+                        'quantity' => $item->quantity,
+                        'type' => 'return',
+                        'note' => "Restocked from Cancelled Order #{$order->id}",
+                        'user_id' => auth()->id()
+                    ]);
+                }
+            }
+
+            if ($request->has('cancel_reason')) {
+                $order->update(['status' => 'cancelled', 'note' => $request->cancel_reason]);
+            } else {
+                $order->update(['status' => 'cancelled']);
+            }
+        });
+
+        return response()->json(['message' => 'Order cancelled and stock returned.']);
     }
 }

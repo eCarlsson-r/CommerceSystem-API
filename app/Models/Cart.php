@@ -22,6 +22,10 @@ class Cart extends Model
         return $this->belongsTo(Product::class);
     }
 
+    public function branch() {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function customer() {
         return $this->belongsTo(Customer::class);
     }

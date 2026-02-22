@@ -6,6 +6,7 @@ use App\Models\Cart;
 use App\Models\Stock;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Resources\CartResource;
 
 class CartController extends Controller
 {
@@ -30,7 +31,7 @@ class CartController extends Controller
         }
 
         // Return the full merged cart from DB
-        return response()->json($user->cartItems()->with('product')->get());
+        return CartResource::collection($user->customer->cartItems()->with('product', 'branch')->get());
     }
 
     /**
@@ -57,7 +58,10 @@ class CartController extends Controller
             ['quantity' => $request->quantity]
         );
 
-        return response()->json(['message' => 'Item added to cart', 'cart' => $user->cartItems()->with('product')->get()]);
+        return response()->json([
+            'message' => 'Item added to cart',
+            'cart' => CartResource::collection($user->customer->cartItems()->with('product', 'branch')->get())
+        ]);
     }
 
     /**
@@ -73,7 +77,20 @@ class CartController extends Controller
      */
     public function update(Request $request, Cart $cart)
     {
-        //
+        $stock = Stock::where('branch_id', $cart->branch_id)
+                    ->where('product_id', $cart->product_id)
+                    ->first();
+
+        if ($stock->quantity < ($cart->quantity + $request->delta)) {
+            return response()->json(['message' => 'Insufficient stock at this branch'], 422);
+        }
+
+        $cart->update(['quantity' => $cart->quantity + $request->delta]);
+
+        return response()->json([
+            'message' => 'Cart item updated',
+            'cart' => new CartResource($cart->load('product', 'branch'))
+        ]);
     }
 
     /**
@@ -81,6 +98,8 @@ class CartController extends Controller
      */
     public function destroy(Cart $cart)
     {
-        //
+        $cart->delete();
+
+        return response()->json(['message' => 'Item removed from cart']);
     }
 }

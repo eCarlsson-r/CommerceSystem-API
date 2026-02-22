@@ -22,7 +22,7 @@ class BranchController extends Controller
         return response()->json(
             Branch::whereHas('stocks', function($q) {
                 $q->where('quantity', '>', 0);
-            })->get(['id', 'name', 'address', 'phone', 'hours'])
+            })->with('media')->get(['id', 'name', 'address', 'phone', 'hours'])
         );
     }
 

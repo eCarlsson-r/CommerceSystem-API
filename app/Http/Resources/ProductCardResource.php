@@ -23,7 +23,8 @@ class ProductCardResource extends JsonResource
             'since_date' => $this->created_at->toISOString(),
             'products_sold' => $this->logs()->where('type', 'OUT')->sum('quantity_change'),
             'media' => $this->product->media,
-            'category' => $this->product->category
+            'category' => $this->product->category,
+            'description' => $this->product->description
         ];
     }
 }

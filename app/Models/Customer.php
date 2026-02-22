@@ -20,6 +20,11 @@ class Customer extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function cartItems()
+    {
+        return $this->hasMany(Cart::class);
+    }
+
     public function user()
     {
         return $this->hasOne(User::class);

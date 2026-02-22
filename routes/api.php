@@ -19,6 +19,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\WishlistController;
 
 // routes/api.php
 Route::prefix('ecommerce')->group(function () {
@@ -28,8 +29,6 @@ Route::prefix('ecommerce')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{slug}/products', [CategoryController::class, 'products']);
-    Route::get('/cart', [CartController::class, 'index']);
-    Route::post('/cart', [CartController::class, 'store']);
 });
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -68,9 +67,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/purchase-report', [ReportController::class, 'purchaseReport']);
 
     Route::prefix('ecommerce')->group(function () {
+        Route::apiResource('cart', CartController::class);
         Route::post('/checkout', [OrderController::class, 'checkout']);
-        Route::get('/my-orders', [OrderController::class, 'myOrders']);
+        Route::get('/orders', [OrderController::class, 'myOrders']);
+        Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice']);
         Route::get('/branches', [BranchController::class, 'index']);
         Route::get('/orders/{id}', [OrderController::class, 'show']);
+        Route::apiResource('wishlist', WishlistController::class);
     });
 });
