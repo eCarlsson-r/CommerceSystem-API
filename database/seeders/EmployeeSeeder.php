@@ -75,20 +75,6 @@ class EmployeeSeeder extends Seeder
                 ['user_id' => $empData['user_id']],
                 $empData
             );
-
-            // Create dummy media (profile image) for each employee if not exists
-            if (!$employee->media()->exists()) {
-                Media::create([
-                    'model_type' => Employee::class,
-                    'model_id' => $employee->id,
-                    'file_name' => 'employee_' . $employee->id . '.jpg',
-                    'mime_type' => 'image/jpeg',
-                    'extension' => 'jpg',
-                    'size' => $faker->numberBetween(10000, 50000),
-                    'disk' => 'public',
-                    'path' => 'employees/' . $employee->id . '.jpg',
-                ]);
-            }
         }
     }
 }

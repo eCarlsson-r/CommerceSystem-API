@@ -34,11 +34,12 @@ Secure, role-based endpoints for internal operations with granular access contro
 - **Omnichannel Order Processing**: Unified handling of online orders, in-store sales, and returns.
 - **Financial Reporting**: Comprehensive analytics including sales reports, purchase tracking, and daily closings.
 
-### 📡 Real-Time Synchronization Engine
+### 📡 Real-Time Synchronization & Notification Engine
 
-- **WebSocket Broadcasting**: Instant updates via Laravel Reverb for live inventory and order status.
+- **WebSocket Broadcasting**: Instant updates via Laravel Reverb for live inventory, orders, and sales status.
+- **Push Notifications**: WebPush notifications to staff and admins for orders, sales, and stock transfers.
+- **Event-Driven Architecture**: Reactive updates with queued notification processing for scalability.
 - **Cross-Channel Sync**: Seamless data flow between online storefronts, POS systems, and admin panels.
-- **Event-Driven Architecture**: Reactive updates ensuring data consistency across the entire ecosystem.
 
 ### 🏢 Enterprise ERP Capabilities
 
@@ -55,7 +56,9 @@ Engineered for scale, security, and maintainability:
 
 - **Laravel Sanctum Authentication**: Stateless JWT-based auth with secure API token management.
 - **Database Agnostic**: Supports PostgreSQL, MySQL, and SQLite with Eloquent ORM for flexible deployments.
-- **Queue-Driven Processing**: Asynchronous job handling for heavy operations like report generation and email notifications.
+- **Queue-Driven Processing**: Asynchronous job handling for notifications, report generation, and heavy operations.
+- **Notification System**: WebPush notifications with database persistence for orders, sales, and stock transfers.
+- **Real-Time Broadcasting**: Laravel Reverb integration for instant UI updates across all connected clients.
 - **API Rate Limiting**: Built-in throttling to prevent abuse and ensure fair resource allocation.
 - **Comprehensive Testing**: Full test suite with Feature and Unit tests covering 95%+ code coverage.
 - **Performance Optimization**: Eager loading, caching strategies, and optimized queries for sub-100ms response times.
@@ -143,7 +146,7 @@ This command handles: dependency installation, environment setup, database migra
 - 🛍️ **[CommerceStore](https://github.com/eCarlsson-r/CommerceStore)** - Next.js E-commerce Storefront
 - ⚙️ **[CommerceSystem-API](https://github.com/eCarlsson-r/CommerceSystem-API)** - Laravel Backend & API Hub (this repository)
 
-Real-time synchronization ensures unified operations across all touchpoints.
+Real-time broadcasting and push notifications ensure unified operations and instant updates across all touchpoints.
 
 ---
 

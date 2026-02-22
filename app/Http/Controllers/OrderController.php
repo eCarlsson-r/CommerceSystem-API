@@ -11,6 +11,7 @@ use App\Models\Sale;
 use App\Services\StockService; // Import your new service
 use App\Http\Resources\OrderResource;
 use PDF;
+use App\Events\OrderCreated;
 
 class OrderController extends Controller
 {
@@ -88,6 +89,7 @@ class OrderController extends Controller
             }
 
             DB::commit();
+            event(new OrderCreated($order));
             return response()->json(['order_id' => $order->id], 201);
 
         } catch (\Exception $e) {

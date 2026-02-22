@@ -23,7 +23,8 @@ use App\Http\Controllers\WishlistController;
 
 // routes/api.php
 Route::prefix('ecommerce')->group(function () {
-    Route::get('/branches', [BranchController::class, 'publicIndex']);
+    Route::get('/branches', [BranchController::class, 'index']);
+    Route::get('/branches/{id}', [BranchController::class, 'show']);
     Route::get('/banners', [BannerController::class, 'publicIndex']);
     Route::get('/products', [ProductController::class, 'getProducts']);
     Route::get('/products/{id}', [ProductController::class, 'show']);
@@ -31,7 +32,6 @@ Route::prefix('ecommerce')->group(function () {
     Route::get('/categories/{slug}/products', [CategoryController::class, 'products']);
 });
 
-Route::post('/login', [AuthController::class, 'login']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/subscribe', [AuthController::class, 'subscribe']);
 Route::post('/register', [AuthController::class, 'register']);
@@ -71,7 +71,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/checkout', [OrderController::class, 'checkout']);
         Route::get('/orders', [OrderController::class, 'myOrders']);
         Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice']);
-        Route::get('/branches', [BranchController::class, 'index']);
         Route::get('/orders/{id}', [OrderController::class, 'show']);
         Route::apiResource('wishlist', WishlistController::class);
     });

@@ -10,6 +10,7 @@ use App\Services\StockService; // Import your new service
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Resources\SaleResource;
+use App\Events\SaleCreated;
 
 class SaleController extends Controller
 {
@@ -77,13 +78,16 @@ class SaleController extends Controller
             // 4. Update Stocks & Record to StockLog (Kartu Stok)
             foreach ($request->items as $item) {
                 $this->stockService->decrease(
-                    $request->branch_id, 
-                    $item['product_id'], 
+                    $request->branch_id,
+                    $item['product_id'],
                     $item['quantity'],
                     $invoice_number,
                     'SALE'
                 );
             }
+
+            // Fire the sale created event for notifications
+            event(new SaleCreated($sale));
 
             return new SaleResource($sale->load(['branch', 'employee', 'customer', 'items', 'payments']));
         });

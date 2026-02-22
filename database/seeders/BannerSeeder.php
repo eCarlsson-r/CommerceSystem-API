@@ -53,20 +53,6 @@ class BannerSeeder extends Seeder
                 ['title' => $bData['title']],
                 $bData
             );
-
-            // Create dummy media (banner image) if not exists
-            if (!$banner->media()->exists()) {
-                Media::create([
-                    'model_type' => Banner::class,
-                    'model_id' => $banner->id,
-                    'file_name' => 'banner_' . $banner->id . '.jpg',
-                    'mime_type' => 'image/jpeg',
-                    'extension' => 'jpg',
-                    'size' => $faker->numberBetween(50000, 200000),
-                    'disk' => 'public',
-                    'path' => 'banners/' . $banner->id . '.jpg',
-                ]);
-            }
         }
     }
 }
