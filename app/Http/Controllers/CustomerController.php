@@ -62,12 +62,38 @@ class CustomerController extends Controller
         return response()->json($sales);
     }
 
+    public function search(Request $request)
+    {
+        $q = $request->query('q', '');
+        $customers = Customer::query()
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")
+                    ->orWhere('mobile', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%");
+            })
+            ->limit(30)
+            ->get();
+
+        return response()->json($customers);
+    }
+
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, Customer $customer)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'mobile' => 'required|string|max:30|unique:customers,mobile,'.$customer->id,
+            'email' => 'nullable|email|max:255',
+            'address' => 'nullable|string|max:255',
+            'balance' => 'nullable|numeric',
+            'points' => 'nullable|integer',
+        ]);
+
+        $customer->update($validated);
+
+        return response()->json($customer);
     }
 
     /**
@@ -75,6 +101,7 @@ class CustomerController extends Controller
      */
     public function destroy(Customer $customer)
     {
-        //
+        $customer->delete();
+        return response()->noContent();
     }
 }

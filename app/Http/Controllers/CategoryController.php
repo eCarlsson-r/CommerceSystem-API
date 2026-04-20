@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Http\Resources\ProductCardResource;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
@@ -45,5 +46,22 @@ class CategoryController extends Controller
         }
         $category->delete();
         return response()->noContent();
+    }
+
+    public function products(string $slug)
+    {
+        $category = Category::where('slug', $slug)->firstOrFail();
+        $stocks = $category->products()
+            ->with(['stocks' => function ($query) {
+                $query->where('quantity', '>', 0)->with(['product.media', 'product.category', 'logs']);
+            }])
+            ->get()
+            ->flatMap(fn ($product) => $product->stocks)
+            ->unique('product_id')
+            ->values();
+
+        return response()->json([
+            'products' => $stocks->map(fn ($stock) => new ProductCardResource($stock)),
+        ]);
     }
 }

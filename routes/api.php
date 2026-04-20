@@ -20,6 +20,9 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\BannerController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\WishlistController;
+use App\Http\Controllers\AIController;
+use App\Http\Controllers\PreviewController;
+use App\Http\Controllers\KPIAnalyticsController;
 
 // routes/api.php
 Route::prefix('ecommerce')->group(function () {
@@ -30,6 +33,15 @@ Route::prefix('ecommerce')->group(function () {
     Route::get('/products/{id}', [ProductController::class, 'show']);
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/{slug}/products', [CategoryController::class, 'products']);
+    Route::post('/previews', [PreviewController::class, 'store']);
+    Route::post('/previews/attach', [PreviewController::class, 'attachToCart']);
+});
+
+Route::prefix('ai')->middleware('throttle:60,1')->group(function () {
+    Route::post('/recommendations', [AIController::class, 'recommendations']);
+    Route::post('/visual-search', [AIController::class, 'visualSearch']);
+    Route::post('/assistant', [AIController::class, 'assistant']);
+    Route::post('/translate-draft', [AIController::class, 'translateDraft']);
 });
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -43,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('settings', SettingsController::class);
     Route::apiResource('branches', BranchController::class);
     Route::get('/customers/{id}/history', [CustomerController::class, 'history']);
+    Route::get('/customers/search', [CustomerController::class, 'search']);
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('employees', EmployeeController::class);
     Route::apiResource('categories', CategoryController::class);
@@ -65,6 +78,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/stock-audit', [ReportController::class, 'stockAudit']);
     Route::get('/reports/sales-report', [ReportController::class, 'salesReport']);
     Route::get('/reports/purchase-report', [ReportController::class, 'purchaseReport']);
+
+    // KPI Analytics endpoints
+    Route::prefix('analytics/kpi')->group(function () {
+        Route::get('/summary', [KPIAnalyticsController::class, 'summary']);
+        Route::get('/commercial', [KPIAnalyticsController::class, 'commercialKPIs']);
+        Route::get('/operational', [KPIAnalyticsController::class, 'operationalKPIs']);
+        Route::get('/governance', [KPIAnalyticsController::class, 'governanceKPIs']);
+        Route::post('/record', [KPIAnalyticsController::class, 'record']);
+    });
 
     Route::prefix('ecommerce')->group(function () {
         Route::apiResource('cart', CartController::class);

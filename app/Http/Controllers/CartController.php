@@ -39,12 +39,18 @@ class CartController extends Controller
      */
     public function store(Request $request)
     {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'branch_id' => 'required|exists:branches,id',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
         $user = $request->user()->load('customer');
         $stock = Stock::where('branch_id', $request->branch_id)
                     ->where('product_id', $request->product_id)
                     ->first();
 
-        if ($stock->quantity < $request->quantity) {
+        if (!$stock || $stock->quantity < $request->quantity) {
             return response()->json(['message' => 'Insufficient stock at this branch'], 422);
         }
 
@@ -77,15 +83,20 @@ class CartController extends Controller
      */
     public function update(Request $request, Cart $cart)
     {
+        $request->validate([
+            'delta' => 'required|integer',
+        ]);
+
         $stock = Stock::where('branch_id', $cart->branch_id)
                     ->where('product_id', $cart->product_id)
                     ->first();
 
-        if ($stock->quantity < ($cart->quantity + $request->delta)) {
+        if (!$stock || $stock->quantity < ($cart->quantity + $request->delta)) {
             return response()->json(['message' => 'Insufficient stock at this branch'], 422);
         }
 
-        $cart->update(['quantity' => $cart->quantity + $request->delta]);
+        $nextQuantity = max(1, $cart->quantity + $request->delta);
+        $cart->update(['quantity' => $nextQuantity]);
 
         return response()->json([
             'message' => 'Cart item updated',

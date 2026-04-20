@@ -21,7 +21,8 @@ class CartResource extends JsonResource
                     ->first();
 
         return [
-            'id' => $this->id,
+            'id' => $this->product_id,
+            'cart_item_id' => $this->id,
             'product_id' => $this->product_id,
             'branch_id' => $this->branch_id,
             'name' => $this->product->name,

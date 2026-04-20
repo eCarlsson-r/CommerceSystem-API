@@ -34,7 +34,8 @@ class BranchController extends Controller
         $validated = $request->validate([
             'name' => 'required|string',
             'address' => 'required|string',
-            'phone' => 'required'
+            'phone' => 'required',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('image')) {
@@ -60,7 +61,8 @@ class BranchController extends Controller
         $validated = $request->validate([
             'name' => 'required|string',
             'address' => 'required|string',
-            'phone' => 'required'
+            'phone' => 'required',
+            'is_active' => 'nullable|boolean',
         ]);
 
         if ($request->hasFile('image')) {
