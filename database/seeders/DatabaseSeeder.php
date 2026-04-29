@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             StockLogSeeder::class,
             CartSeeder::class,
             OrderSeeder::class,
+            // KPIRecordSeeder::class, // Uncomment to seed sample analytics data
         ]);
 
         Settings::updateOrCreate(

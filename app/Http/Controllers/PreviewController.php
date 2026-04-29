@@ -13,44 +13,74 @@ class PreviewController extends Controller
         $payload = $request->validate([
             'preview_id' => 'nullable|string|max:100',
             'product_id' => 'required|exists:products,id',
-            'image_url' => 'required|string|max:2048',
+            'room_dimensions' => 'required|array',
+            'room_dimensions.width' => 'required|numeric|min:0.1|max:50',
+            'room_dimensions.height' => 'required|numeric|min:0.1|max:20',
+            'room_dimensions.depth' => 'required|numeric|min:0.1|max:50',
+            'selected_wall' => 'required|in:front,back,left,right,all',
             'tile_scale' => 'nullable|numeric|min:0.1|max:10',
-            'blend_intensity' => 'nullable|numeric|min:0|max:1',
-            'wall_polygon' => 'nullable|array',
-            'metadata' => 'nullable|array',
+            'pattern_repeat' => 'nullable|numeric|min:0|max:200',
+            'wall_coverage' => 'nullable|array',
+            'wall_coverage.*.wall' => 'required|in:front,back,left,right,all',
+            'wall_coverage.*.width' => 'required|numeric',
+            'wall_coverage.*.height' => 'required|numeric',
+            'wall_coverage.*.rolls_needed' => 'required|numeric|min:1',
         ]);
 
         $preview = Preview::create([
             'customer_id' => optional($request->user()?->customer)->id,
             'product_id' => $payload['product_id'],
-            'image_url' => $payload['image_url'],
+            'room_dimensions' => $payload['room_dimensions'],
+            'selected_wall' => $payload['selected_wall'],
             'tile_scale' => $payload['tile_scale'] ?? 1,
-            'blend_intensity' => $payload['blend_intensity'] ?? 0.7,
-            'wall_polygon' => $payload['wall_polygon'] ?? null,
-            'metadata' => array_merge($payload['metadata'] ?? [], [
+            'pattern_repeat' => $payload['pattern_repeat'] ?? 53,
+            'wall_coverage' => $payload['wall_coverage'] ?? null,
+            'metadata' => [
                 'client_preview_id' => $payload['preview_id'] ?? null,
-            ]),
+            ],
         ]);
 
         return response()->json([
             'preview_id' => $preview->id,
-            'message' => 'Preview saved',
+            'message' => 'Room preview saved',
         ], 201);
     }
 
     public function attachToCart(Request $request): JsonResponse
     {
         $payload = $request->validate([
-            'preview_id' => 'required|exists:previews,id',
-            'cart_id' => 'required|exists:carts,id',
+            'preview_id' => 'required|string|max:100',
+            'product_id' => 'required|exists:products,id',
+            'preview_url' => 'required|string|max:2048',
+            'wall_coverage' => 'nullable|array',
         ]);
 
-        $preview = Preview::findOrFail($payload['preview_id']);
-        $preview->update(['cart_id' => $payload['cart_id']]);
+        // Find or create a cart item for this product and user
+        $customerId = optional($request->user()?->customer)->id;
+
+        if (!$customerId) {
+            return response()->json([
+                'message' => 'Preview attachment queued for guest user',
+                'preview_id' => $payload['preview_id'],
+            ]);
+        }
+
+        // Find existing cart item for this product
+        $cartItem = \App\Models\Cart::where('customer_id', $customerId)
+            ->where('product_id', $payload['product_id'])
+            ->first();
+
+        if ($cartItem) {
+            $cartItem->update([
+                'preview_id' => $payload['preview_id'],
+                'preview_url' => $payload['preview_url'],
+                'wall_coverage' => $payload['wall_coverage'] ?? null,
+            ]);
+        }
 
         return response()->json([
-            'message' => 'Preview attached to cart',
-            'preview' => $preview,
+            'message' => 'Room preview attached to cart',
+            'preview_id' => $payload['preview_id'],
         ]);
     }
 }

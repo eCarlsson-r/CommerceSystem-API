@@ -10,17 +10,22 @@ class Preview extends Model
         'customer_id',
         'product_id',
         'cart_id',
-        'image_url',
+        'preview_id',
+        'product_image',
+        'room_dimensions',
+        'selected_wall',
         'tile_scale',
-        'blend_intensity',
-        'wall_polygon',
+        'pattern_repeat',
+        'wall_coverage',
+        'room_preview_url',
         'metadata',
     ];
 
     protected $casts = [
         'tile_scale' => 'float',
-        'blend_intensity' => 'float',
-        'wall_polygon' => 'array',
+        'pattern_repeat' => 'integer',
+        'room_dimensions' => 'array',
+        'wall_coverage' => 'array',
         'metadata' => 'array',
     ];
 }

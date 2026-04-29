@@ -13,6 +13,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockTransferController;
+use App\Http\Controllers\KPIAnalyticsController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SettingsController;
@@ -22,7 +23,6 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\AIController;
 use App\Http\Controllers\PreviewController;
-use App\Http\Controllers\KPIAnalyticsController;
 
 // routes/api.php
 Route::prefix('ecommerce')->group(function () {
@@ -79,15 +79,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/sales-report', [ReportController::class, 'salesReport']);
     Route::get('/reports/purchase-report', [ReportController::class, 'purchaseReport']);
 
-    // KPI Analytics endpoints
-    Route::prefix('analytics/kpi')->group(function () {
-        Route::get('/summary', [KPIAnalyticsController::class, 'summary']);
-        Route::get('/commercial', [KPIAnalyticsController::class, 'commercialKPIs']);
-        Route::get('/operational', [KPIAnalyticsController::class, 'operationalKPIs']);
-        Route::get('/governance', [KPIAnalyticsController::class, 'governanceKPIs']);
-        Route::post('/record', [KPIAnalyticsController::class, 'record']);
-    });
-
     Route::prefix('ecommerce')->group(function () {
         Route::apiResource('cart', CartController::class);
         Route::post('/checkout', [OrderController::class, 'checkout']);
@@ -95,5 +86,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders/{id}/invoice', [OrderController::class, 'invoice']);
         Route::get('/orders/{id}', [OrderController::class, 'show']);
         Route::apiResource('wishlist', WishlistController::class);
+    });
+
+    // Analytics & KPI Routes
+    Route::prefix('analytics')->group(function () {
+        Route::get('/kpi/commercial', [KPIAnalyticsController::class, 'commercialKPIs']);
+        Route::get('/kpi/operational', [KPIAnalyticsController::class, 'operationalKPIs']);
+        Route::get('/kpi/governance', [KPIAnalyticsController::class, 'governanceKPIs']);
+        Route::get('/kpi/summary', [KPIAnalyticsController::class, 'summary']);
+        Route::post('/kpi/record', [KPIAnalyticsController::class, 'record']);
     });
 });
