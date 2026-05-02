@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Preview extends Model
 {
     protected $fillable = [
+        'preview_id',
         'customer_id',
         'product_id',
         'cart_id',
-        'preview_id',
         'product_image',
         'room_dimensions',
         'selected_wall',

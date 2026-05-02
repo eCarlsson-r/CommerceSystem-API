@@ -68,4 +68,35 @@ class AIController extends Controller
 
         return response()->json($this->aiService->translateDraft($payload));
     }
+
+    /**
+     * Magic Button: Generate Text Descriptions
+     */
+    public function generateDescription(Request $request)
+    {
+        $prompt = "Generate a professional, SEO-optimized retail description for: " . $request->input('context');
+        
+        // Use Vertex AI / Gemini 1.5 Flash for speed
+        $response = Http::withToken(config('services.google.token'))
+            ->post('https://asia-southeast1-aiplatform.googleapis.com/v1/projects/' . config('services.google.project_id') . '/locations/us-central1/publishers/google/models/gemini-1.5-flash:streamGenerateContent', [
+                'contents' => ['parts' => ['text' => $prompt]]
+            ]);
+
+        return response()->json(['text' => $response->json('candidates.0.content.parts.0.text')]);
+    }
+
+    /**
+     * Magic Button: Generate Product Image
+     */
+    public function generateImage(Request $request)
+    {
+        // Use Imagen 3 via Vertex AI
+        $response = Http::withToken(config('services.google.token'))
+            ->post('https://asia-southeast1-aiplatform.googleapis.com/v1/projects/' . config('services.google.project_id') . '/locations/us-central1/publishers/google/models/imagen-3:predict', [
+                'instances' => [['prompt' => $request->input('prompt')]],
+                'parameters' => ['sampleCount' => 1]
+            ]);
+
+        return response()->json(['image_base64' => $response->json('predictions.0.bytesBase64Encoded')]);
+    }
 }

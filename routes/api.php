@@ -35,6 +35,7 @@ Route::prefix('ecommerce')->group(function () {
     Route::get('/categories/{slug}/products', [CategoryController::class, 'products']);
     Route::post('/previews', [PreviewController::class, 'store']);
     Route::post('/previews/attach', [PreviewController::class, 'attachToCart']);
+    Route::get('/preview-render/{previewId}', [PreviewController::class, 'render']);
 });
 
 Route::prefix('ai')->middleware('throttle:60,1')->group(function () {
@@ -94,6 +95,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/kpi/operational', [KPIAnalyticsController::class, 'operationalKPIs']);
         Route::get('/kpi/governance', [KPIAnalyticsController::class, 'governanceKPIs']);
         Route::get('/kpi/summary', [KPIAnalyticsController::class, 'summary']);
-        Route::post('/kpi/record', [KPIAnalyticsController::class, 'record']);
     });
 });
+
+// Public KPI recording (allows guest tracking)
+Route::post('/analytics/kpi/record', [KPIAnalyticsController::class, 'record']);

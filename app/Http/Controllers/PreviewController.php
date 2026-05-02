@@ -25,9 +25,11 @@ class PreviewController extends Controller
             'wall_coverage.*.width' => 'required|numeric',
             'wall_coverage.*.height' => 'required|numeric',
             'wall_coverage.*.rolls_needed' => 'required|numeric|min:1',
+            'room_preview_url' => 'nullable|string|max:2048',
         ]);
 
         $preview = Preview::create([
+            'preview_id' => $payload['preview_id'] ?? null,
             'customer_id' => optional($request->user()?->customer)->id,
             'product_id' => $payload['product_id'],
             'room_dimensions' => $payload['room_dimensions'],
@@ -35,6 +37,7 @@ class PreviewController extends Controller
             'tile_scale' => $payload['tile_scale'] ?? 1,
             'pattern_repeat' => $payload['pattern_repeat'] ?? 53,
             'wall_coverage' => $payload['wall_coverage'] ?? null,
+            'room_preview_url' => $payload['room_preview_url'] ?? null,
             'metadata' => [
                 'client_preview_id' => $payload['preview_id'] ?? null,
             ],
@@ -82,5 +85,45 @@ class PreviewController extends Controller
             'message' => 'Room preview attached to cart',
             'preview_id' => $payload['preview_id'],
         ]);
+    }
+
+    public function render(Request $request, string $previewId)
+    {
+        $params = $request->validate([
+            'productId' => 'required|integer|exists:products,id',
+            'wall' => 'required|in:front,back,left,right,all',
+            'width' => 'required|numeric|min:1|max:50',
+            'height' => 'required|numeric|min:1|max:20',
+            'depth' => 'required|numeric|min:1|max:50',
+            'scale' => 'nullable|numeric|min:0.1|max:10',
+        ]);
+
+        $product = \App\Models\Product::find($params['productId']);
+        
+        // Build interior design prompt
+        $wallDescriptions = [
+            'front' => 'front wall',
+            'back' => 'back wall',
+            'left' => 'left wall',
+            'right' => 'right wall',
+            'all' => 'all four walls',
+        ];
+        
+        $wallDesc = $wallDescriptions[$params['wall']];
+        $roomSize = $params['width'] . 'm x ' . $params['depth'] . 'm room with ' . $params['height'] . 'm ceiling height';
+        
+        // Extract product name/pattern for the prompt
+        $productName = $product->name ?? 'decorative wallpaper';
+        $productDesc = $product->description ? substr($product->description, 0, 100) : 'elegant pattern';
+        
+        // Construct a detailed interior design prompt
+        $prompt = urlencode("Professional interior design photography of a {$roomSize}, {$wallDesc} covered with {$productName} wallpaper featuring {$productDesc}. Modern living space with natural lighting, neutral furniture, warm ambient light, photorealistic, 8k quality, architectural visualization, floor lamp, sofa, minimal decor");
+        
+        // Pollinations.ai URL with seed based on previewId for consistency
+        $seed = crc32($previewId) % 10000;
+        $pollinationsUrl = "https://image.pollinations.ai/prompt/{$prompt}?width=1024&height=768&seed={$seed}&nologo=true&negative_prompt=blurry,low quality, distorted, ugly, deformed";
+        
+        // Redirect to Pollinations (they generate and cache the image)
+        return redirect()->away($pollinationsUrl);
     }
 }
