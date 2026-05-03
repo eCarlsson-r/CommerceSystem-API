@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\LaravelAiKitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class AIController extends Controller
 {
@@ -98,5 +99,19 @@ class AIController extends Controller
             ]);
 
         return response()->json(['image_base64' => $response->json('predictions.0.bytesBase64Encoded')]);
+    }
+
+    /**
+     * Magic Button: Edit Product Image (Wallpaper Room Preview / Generative Fill)
+     */
+    public function editImage(Request $request)
+    {
+        $payload = $request->validate([
+            'prompt' => 'required|string|max:1000',
+            'baseImageBase64' => 'required|string',
+            'maskImageBase64' => 'nullable|string',
+        ]);
+
+        return response()->json($this->aiService->editImage($payload));
     }
 }

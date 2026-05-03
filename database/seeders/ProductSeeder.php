@@ -48,11 +48,50 @@ class ProductSeeder extends Seeder
                 'name' => 'Keroppi',
                 'category_id' => $categories->where('name', 'Dolls')->first()?->id ?? 3,
                 'description' => 'Doll of Keroppi.',
+            ],
+            [
+                'sku' => 'WLP-001',
+                'name' => 'Royal Damask Gold',
+                'category_id' => $categories->where('name', 'Wallpaper')->first()?->id ?? 11,
+                'description' => 'Premium gold damask pattern wallpaper.',
+                'base_price' => 150000
+            ],
+            [
+                'sku' => 'WLP-002',
+                'name' => 'Modern Geometric Grey',
+                'category_id' => $categories->where('name', 'Wallpaper')->first()?->id ?? 11,
+                'description' => 'Minimalist grey geometric pattern.',
+                'base_price' => 125000
+            ],
+            [
+                'sku' => 'WLP-003',
+                'name' => 'Tropical Leaf Green',
+                'category_id' => $categories->where('name', 'Wallpaper')->first()?->id ?? 11,
+                'description' => 'Vibrant tropical leaf pattern for a fresh look.',
+                'base_price' => 135000
             ]
         ];
 
         foreach ($products as $pData) {
-            Product::create($pData);
+            $product = Product::create($pData);
+
+            // Add sample media for wallpapers
+            if (str_starts_with($product->sku, 'WLP')) {
+                $patterns = [
+                    'WLP-001' => 'https://images.pexels.com/photos/1037992/pexels-photo-1037992.jpeg',
+                    'WLP-002' => 'https://images.pexels.com/photos/172289/pexels-photo-172289.jpeg',
+                    'WLP-003' => 'https://images.pexels.com/photos/1029606/pexels-photo-1029606.jpeg'
+                ];
+
+                $product->media()->create([
+                    'file_name' => $product->sku . '.jpg',
+                    'mime_type' => 'image/jpeg',
+                    'extension' => 'jpg',
+                    'size' => 1024,
+                    'disk' => 'public',
+                    'path' => $patterns[$product->sku] ?? $patterns['WLP-001']
+                ]);
+            }
         }
     }
 }

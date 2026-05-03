@@ -43,6 +43,9 @@ Route::prefix('ai')->middleware('throttle:60,1')->group(function () {
     Route::post('/visual-search', [AIController::class, 'visualSearch']);
     Route::post('/assistant', [AIController::class, 'assistant']);
     Route::post('/translate-draft', [AIController::class, 'translateDraft']);
+    Route::post('/generate-description', [AIController::class, 'generateDescription']);
+    Route::post('/generate-image', [AIController::class, 'generateImage']);
+    Route::post('/edit-image', [AIController::class, 'editImage']);
 });
 
 Route::post('/login', [AuthController::class, 'login']);

@@ -23,7 +23,8 @@ class CategorySeeder extends Seeder
             'Home & Garden',
             'Sports',
             'Toys',
-            'Beauty'
+            'Beauty',
+            'Wallpaper'
         ];
 
         foreach ($categories as $name) {
