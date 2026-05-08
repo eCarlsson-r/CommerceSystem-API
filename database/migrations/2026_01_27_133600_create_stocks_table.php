@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
-            $table->string('branch_id', 10)->index();
-            $table->string('product_id', 20)->index();
+            $table->foreignId('branch_id')->constrained('branches');
+            $table->foreignId('product_id')->constrained('products');
             $table->integer('quantity')->default(0);
             $table->decimal('purchase_price', 12, 2);
             $table->decimal('sale_price', 12, 2);
