@@ -13,6 +13,10 @@ return [
     | a conventional file to locate the various service credentials.
     |
     */
+    'google' => [
+        'project_id' => env('GOOGLE_PROJECT_ID'),
+        'service_account' => json_decode(base64_decode(env('GOOGLE_SERVICE_KEY')), true)
+    ],
 
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),

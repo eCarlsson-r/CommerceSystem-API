@@ -9,12 +9,23 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Google\Auth\Credentials\ServiceAccountCredentials;
 
 class LaravelAiKitService
 {
     private array $costTracker = [];
     private int $maxRetries = 3;
     private float $retryDelay = 0.5;
+
+    protected function getGoogleAccessToken()
+    {
+        $auth = new ServiceAccountCredentials(
+            'https://www.googleapis.com/auth/cloud-platform',
+            config('services.google.service_account')
+        );
+
+        return $auth->fetchAuthToken()['access_token'];
+    }
 
     /**
      * Track API costs for monitoring
@@ -69,8 +80,14 @@ class LaravelAiKitService
     private function getGoogleEndpoint(string $model, string $action): string
     {
         $project = config('services.google.project_id');
-        $location = config('services.google.location', 'us-central1');
-        return "https://{$location}-aiplatform.googleapis.com/v1/projects/{$project}/locations/{$location}/publishers/google/models/{$model}:{$action}";
+        return "https://aiplatform.googleapis.com/v1/projects/{$project}/locations/global/publishers/google/models/{$model}:{$action}";
+    }
+
+    public function postToVertex(string $model, string $action, array $payload, int $timeout = 30)
+    {
+        return Http::withToken($this->getGoogleAccessToken())
+            ->timeout($timeout)
+            ->post($this->getGoogleEndpoint($model, $action), $payload);
     }
 
     /**
@@ -84,11 +101,9 @@ class LaravelAiKitService
         
         return Cache::remember($cacheKey, now()->addHours(24), function () use ($text) {
             return $this->retryHttp(function () use ($text) {
-                $response = Http::withToken(config('services.google.token'))
-                    ->timeout(30)
-                    ->post($this->getGoogleEndpoint('text-embedding-004', 'predict'), [
-                        'instances' => [['content' => substr($text, 0, 8000)]]
-                    ]);
+                $response = $this->postToVertex('text-embedding-004', 'predict', [
+                    'instances' => [['content' => substr($text, 0, 8000)]]
+                ]);
                 
                 if (!$response->successful()) {
                     throw new \Exception('Embedding API error: ' . $response->body());
@@ -113,11 +128,9 @@ class LaravelAiKitService
             $response = $this->retryHttp(function () use ($chunk) {
                 $instances = array_map(fn($text) => ['content' => substr($text, 0, 8000)], $chunk);
                 
-                return Http::withToken(config('services.google.token'))
-                    ->timeout(60)
-                    ->post($this->getGoogleEndpoint('text-embedding-004', 'predict'), [
-                        'instances' => $instances
-                    ]);
+                return $this->postToVertex('text-embedding-004', 'predict', [
+                    'instances' => $instances
+                ], 60);
             }, 'batch-text-embedding');
 
             $predictions = $response->json('predictions') ?? [];
@@ -138,15 +151,13 @@ class LaravelAiKitService
     {
         return $this->retryHttp(function () use ($imageUrl) {
             $imageData = base64_encode(file_get_contents($imageUrl));
-            $response = Http::withToken(config('services.google.token'))
-                ->timeout(30)
-                ->post($this->getGoogleEndpoint('multimodalembedding@001', 'predict'), [
-                    'instances' => [
-                        [
-                            'image' => ['bytesBase64Encoded' => $imageData]
-                        ]
+            $response = $this->postToVertex('multimodalembedding@001', 'predict', [
+                'instances' => [
+                    [
+                        'image' => ['bytesBase64Encoded' => $imageData]
                     ]
-                ]);
+                ]
+            ]);
 
             if (!$response->successful()) {
                 throw new \Exception('Multimodal embedding API error: ' . $response->body());
@@ -185,7 +196,7 @@ class LaravelAiKitService
 
         // PostgreSQL pgvector search: Use <=> operator for cosine distance
         $products = DB::table('products')
-            ->select('id', DB::raw("1 - (embedding <=> '{$vectorStr}') AS score"))
+            ->select('id', 'name', 'base_price', DB::raw("1 - (embedding <=> '{$vectorStr}') AS score"))
             ->whereNotNull('embedding')
             ->orderByRaw("embedding <=> '{$vectorStr}'")
             ->limit($maxResults)
@@ -193,6 +204,8 @@ class LaravelAiKitService
 
         $items = $products->map(fn ($product) => [
             'productId' => (int) $product->id,
+            'name' => $product->name,
+            'price' => (float) $product->base_price,
             'score' => round((float) $product->score, 2),
             'reason' => 'Semantic match via pgvector',
         ])->all();
@@ -216,7 +229,7 @@ class LaravelAiKitService
 
         // PostgreSQL pgvector search using multimodal embedding
         $products = DB::table('products')
-            ->select('id', DB::raw("1 - (embedding <=> '{$vectorStr}') AS score"))
+            ->select('id', 'name', 'base_price', DB::raw("1 - (embedding <=> '{$vectorStr}') AS score"))
             ->whereNotNull('embedding')
             ->orderByRaw("embedding <=> '{$vectorStr}'")
             ->limit($maxResults)
@@ -224,6 +237,8 @@ class LaravelAiKitService
 
         $items = $products->map(fn ($product) => [
             'productId' => (int) $product->id,
+            'name' => $product->name,
+            'price' => (float) $product->base_price,
             'score' => round((float) $product->score, 2),
             'reason' => 'Visually similar via Vertex AI',
         ])->all();
@@ -267,19 +282,24 @@ class LaravelAiKitService
             : "{$systemPrompt}\n\nUser question: {$message}";
 
         $response = $this->retryHttp(function () use ($prompt) {
-            return Http::withToken(config('services.google.token'))
-                ->timeout(30)
-                ->post($this->getGoogleEndpoint('gemini-1.5-flash', 'generateContent'), [
-                    'contents' => [
+            $res = $this->postToVertex('gemini-3.1-flash-lite', 'generateContent', [
+                'contents' => [
+                    [
                         'role' => 'user',
                         'parts' => [['text' => $prompt]]
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.7,
-                        'maxOutputTokens' => 500,
-                        'topP' => 0.8,
                     ]
-                ]);
+                ],
+                'generationConfig' => [
+                    'temperature' => 0.7,
+                    'maxOutputTokens' => 500,
+                    'topP' => 0.8,
+                ]
+            ]);
+            
+            if ($res->failed()) {
+                throw new \Exception('Vertex AI Error: ' . $res->body());
+            }
+            return $res;
         }, 'assistant-chat');
 
         $reply = $response->json('candidates.0.content.parts.0.text') 
@@ -326,10 +346,14 @@ class LaravelAiKitService
 
         $prompt = "Translate the following text to {$targetLocale}:\n\n{$text}";
 
-        $response = Http::withToken(config('services.google.token'))
-            ->post($this->getGoogleEndpoint('gemini-1.5-flash', 'streamGenerateContent'), [
-                'contents' => ['parts' => ['text' => $prompt]]
-            ]);
+        $response = $this->postToVertex('gemini-3.1-flash-lite', 'streamGenerateContent', [
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => [['text' => $prompt]]
+                ]
+            ]
+        ]);
 
         $translatedText = $response->json('0.candidates.0.content.parts.0.text') ?? $response->json('candidates.0.content.parts.0.text') ?? '';
 
@@ -359,15 +383,13 @@ class LaravelAiKitService
         }
 
         return $this->retryHttp(function () use ($instances) {
-            $response = Http::withToken(config('services.google.token'))
-                ->timeout(60)
-                ->post($this->getGoogleEndpoint('imagegeneration@006', 'predict'), [
-                    'instances' => [$instances],
-                    'parameters' => [
-                        'sampleCount' => 1,
-                        'mode' => 'edit',
-                    ]
-                ]);
+            $response = $this->postToVertex('imagegeneration@006', 'predict', [
+                'instances' => [$instances],
+                'parameters' => [
+                    'sampleCount' => 1,
+                    'mode' => 'edit',
+                ]
+            ], 60);
             
             return ['image_base64' => $response->json('predictions.0.bytesBase64Encoded')];
         }, 'image-generation');

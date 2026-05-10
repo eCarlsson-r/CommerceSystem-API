@@ -14,17 +14,11 @@ class CategorySeeder extends Seeder
     public function run(): void
     {
         $categories = [
-            'Crystals',
-            'Jewelry',
-            'Dolls',
-            'Books',
-            'Electronics',
-            'Clothing',
-            'Home & Garden',
-            'Sports',
-            'Toys',
-            'Beauty',
-            'Wallpaper'
+            'Wallpaper',
+            'Murals',
+            'Wall Decals',
+            'Textured Wallpaper',
+            'Vintage Wallpaper'
         ];
 
         foreach ($categories as $name) {
