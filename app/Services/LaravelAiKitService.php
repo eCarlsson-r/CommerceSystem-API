@@ -401,7 +401,7 @@ class LaravelAiKitService
     public function syncAllProductEmbeddings(): array
     {
         $products = Product::whereNull('embedding')
-            ->orWhereRaw('updated_at > created_at + INTERVAL 1 DAY')
+            ->orWhere('updated_at', '>', now()->subDay())
             ->select('id', 'name', 'description', 'category_id')
             ->get();
 

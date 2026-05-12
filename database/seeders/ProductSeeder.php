@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\Product;
 use App\Models\Category;
+use App\Services\LaravelAiKitService;
 
 class ProductSeeder extends Seeder
 {
@@ -97,5 +98,9 @@ class ProductSeeder extends Seeder
                 ]);
             }
         }
+
+        $aiService = new LaravelAiKitService();
+        $result = $aiService->syncAllProductEmbeddings();
+        $this->command->info("Embeddings synced: {$result['updated']} products updated");
     }
 }
