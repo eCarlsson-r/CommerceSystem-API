@@ -80,7 +80,14 @@ class LaravelAiKitService
     private function getGoogleEndpoint(string $model, string $action): string
     {
         $project = config('services.google.project_id');
-        return "https://aiplatform.googleapis.com/v1/projects/{$project}/locations/global/publishers/google/models/{$model}:{$action}";
+        
+        // Gemini often uses 'global', but Imagen/embeddings usually prefer regional endpoints.
+        // We'll try us-central1 as a fallback for everything except Gemini.
+        $location = str_contains($model, 'gemini') ? 'global' : 'us-central1';
+        
+        // Try the base aiplatform endpoint which usually handles routing, 
+        // but some regions might need the regional host.
+        return "https://".(($location == 'global')? "": $location."-")."aiplatform.googleapis.com/v1/projects/{$project}/locations/{$location}/publishers/google/models/{$model}:{$action}";
     }
 
     public function postToVertex(string $model, string $action, array $payload, int $timeout = 30)
@@ -196,7 +203,9 @@ class LaravelAiKitService
 
         // PostgreSQL pgvector search: Use <=> operator for cosine distance
         $products = DB::table('products')
-            ->select('id', 'name', 'base_price', DB::raw("1 - (embedding <=> '{$vectorStr}') AS score"))
+            ->select('products.id', 'products.name', 'base_price', 'path', DB::raw("1 - (embedding <=> '{$vectorStr}') AS score"))
+            ->leftJoin('media', 'products.id', '=', 'media.model_id')
+            ->where('media.model_type', 'App\Models\Product')
             ->whereNotNull('embedding')
             ->orderByRaw("embedding <=> '{$vectorStr}'")
             ->limit($maxResults)
@@ -205,6 +214,7 @@ class LaravelAiKitService
         $items = $products->map(fn ($product) => [
             'productId' => (int) $product->id,
             'name' => $product->name,
+            'imageUrl' => $product->path,
             'price' => (float) $product->base_price,
             'score' => round((float) $product->score, 2),
             'reason' => 'Semantic match via pgvector',
@@ -368,6 +378,7 @@ class LaravelAiKitService
         $prompt = $payload['prompt'];
         $baseImageBase64 = $payload['baseImageBase64'];
         $maskImageBase64 = $payload['maskImageBase64'] ?? null;
+        $productImageBase64 = $payload['productImageBase64'] ?? null;
 
         $instances = [
             'prompt' => $prompt,
@@ -376,22 +387,71 @@ class LaravelAiKitService
             ]
         ];
 
+        $parameters = [
+            'sampleCount' => 1,
+            'mode' => 'edit',
+        ];
+
         if ($maskImageBase64) {
             $instances['mask'] = [
-                'bytesBase64Encoded' => $maskImageBase64
+                'image' => [
+                    'bytesBase64Encoded' => $maskImageBase64
+                ]
+            ];
+        } else {
+            // Mask-free / automatic masking mode.
+            // REFERENCE_TYPE_RAW (id:1) = context image — tells the model what to preserve.
+            // REFERENCE_TYPE_STYLE (id:2) = style image — the actual wallpaper pattern to apply.
+            //
+            // The Imagen 3 API requires at least one referenceImage for mask-free editing.
+            $referenceImages = [
+                [
+                    'referenceType'  => 'REFERENCE_TYPE_RAW',
+                    'referenceId'    => 1,
+                    'referenceImage' => [
+                        'bytesBase64Encoded' => $baseImageBase64
+                    ]
+                ]
+            ];
+
+            // When the caller provides the actual product texture, add it as a style
+            // reference so the model paints that specific pattern onto the walls.
+            if ($productImageBase64) {
+                $referenceImages[] = [
+                    'referenceType'  => 'REFERENCE_TYPE_STYLE',
+                    'referenceId'    => 2,
+                    'referenceImage' => [
+                        'bytesBase64Encoded' => $productImageBase64
+                    ]
+                ];
+            }
+
+            $instances['referenceImages'] = $referenceImages;
+
+            $parameters['maskConfig'] = [
+                'maskMode' => 'MASK_MODE_BACKGROUND'
             ];
         }
 
-        return $this->retryHttp(function () use ($instances) {
-            $response = $this->postToVertex('imagegeneration@006', 'predict', [
+        return $this->retryHttp(function () use ($instances, $parameters) {
+            // Trying imagen-3 as it's more likely to be available than the specific @006 version
+            $response = $this->postToVertex('imagen-3.0-capability-001', 'predict', [
                 'instances' => [$instances],
-                'parameters' => [
-                    'sampleCount' => 1,
-                    'mode' => 'edit',
-                ]
+                'parameters' => $parameters
             ], 60);
+
+            if ($response->failed()) {
+                Log::error("Vertex AI Image Edit failed (Status: {$response->status()}): " . $response->body());
+                throw new \Exception("Vertex AI prediction failed: " . $response->body());
+            }
             
-            return ['image_base64' => $response->json('predictions.0.bytesBase64Encoded')];
+            $imageBase64 = $response->json('predictions.0.bytesBase64Encoded');
+            
+            if (!$imageBase64) {
+                Log::warning("Vertex AI Image Edit returned no prediction. Full Response: " . $response->body());
+            }
+
+            return ['image_base64' => $imageBase64];
         }, 'image-generation');
     }
 
