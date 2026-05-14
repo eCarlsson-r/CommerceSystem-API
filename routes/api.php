@@ -13,7 +13,6 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\StockTransferController;
-use App\Http\Controllers\KPIAnalyticsController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReturnController;
 use App\Http\Controllers\SettingsController;
@@ -35,7 +34,6 @@ Route::prefix('ecommerce')->group(function () {
     Route::get('/categories/{slug}/products', [CategoryController::class, 'products']);
     Route::post('/previews', [PreviewController::class, 'store']);
     Route::post('/previews/attach', [PreviewController::class, 'attachToCart']);
-    Route::get('/preview-render/{previewId}', [PreviewController::class, 'render']);
 });
 
 Route::prefix('ai')->middleware('throttle:60,1')->group(function () {
@@ -43,9 +41,6 @@ Route::prefix('ai')->middleware('throttle:60,1')->group(function () {
     Route::post('/visual-search', [AIController::class, 'visualSearch']);
     Route::post('/assistant', [AIController::class, 'assistant']);
     Route::post('/translate-draft', [AIController::class, 'translateDraft']);
-    Route::post('/generate-description', [AIController::class, 'generateDescription']);
-    Route::post('/generate-image', [AIController::class, 'generateImage']);
-    Route::post('/edit-image', [AIController::class, 'editImage']);
 });
 
 Route::post('/login', [AuthController::class, 'login']);
@@ -91,15 +86,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders/{id}', [OrderController::class, 'show']);
         Route::apiResource('wishlist', WishlistController::class);
     });
-
-    // Analytics & KPI Routes
-    Route::prefix('analytics')->group(function () {
-        Route::get('/kpi/commercial', [KPIAnalyticsController::class, 'commercialKPIs']);
-        Route::get('/kpi/operational', [KPIAnalyticsController::class, 'operationalKPIs']);
-        Route::get('/kpi/governance', [KPIAnalyticsController::class, 'governanceKPIs']);
-        Route::get('/kpi/summary', [KPIAnalyticsController::class, 'summary']);
-    });
 });
-
-// Public KPI recording (allows guest tracking)
-Route::post('/analytics/kpi/record', [KPIAnalyticsController::class, 'record']);

@@ -7,25 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 class Preview extends Model
 {
     protected $fillable = [
-        'preview_id',
         'customer_id',
         'product_id',
         'cart_id',
-        'product_image',
-        'room_dimensions',
-        'selected_wall',
+        'image_url',
         'tile_scale',
-        'pattern_repeat',
-        'wall_coverage',
-        'room_preview_url',
+        'blend_intensity',
+        'wall_polygon',
         'metadata',
     ];
 
     protected $casts = [
         'tile_scale' => 'float',
-        'pattern_repeat' => 'integer',
-        'room_dimensions' => 'array',
-        'wall_coverage' => 'array',
+        'blend_intensity' => 'float',
+        'wall_polygon' => 'array',
         'metadata' => 'array',
     ];
 }
