@@ -67,9 +67,9 @@ class CustomerController extends Controller
         $q = $request->query('q', '');
         $customers = Customer::query()
             ->when($q !== '', function ($query) use ($q) {
-                $query->where('name', 'like', "%{$q}%")
-                    ->orWhere('mobile', 'like', "%{$q}%")
-                    ->orWhere('email', 'like', "%{$q}%");
+                $query->where('name', 'ilike', "%{$q}%")
+                    ->orWhere('mobile', 'ilike', "%{$q}%")
+                    ->orWhere('email', 'ilike', "%{$q}%");
             })
             ->limit(30)
             ->get();

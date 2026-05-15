@@ -33,6 +33,7 @@ class CartSeeder extends Seeder
             foreach ($randomProducts as $product) {
                 Cart::create([
                     'customer_id' => $customer->id,
+                    'branch_id' => $product->stocks()->first()->branch->id, // Assuming product has branches
                     'product_id' => $product->id,
                     'quantity' => rand(1, 5)
                 ]);

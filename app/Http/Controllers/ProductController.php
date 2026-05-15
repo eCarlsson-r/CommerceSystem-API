@@ -30,8 +30,8 @@ class ProductController extends Controller
         if ($request->has('search')) {
             $search = $request->search;
             $products->where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                      ->orWhere('sku', 'like', "%{$search}%");
+                $query->where('name', 'ilike', "%{$search}%")
+                      ->orWhere('sku', 'ilike', "%{$search}%");
             });
         }
 
@@ -187,8 +187,8 @@ class ProductController extends Controller
 
         if ($request->filled('search')) {
             $query->whereHas('product', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('sku', 'like', '%' . $request->search . '%');
+                $q->where('name', 'ilike', '%' . $request->search . '%')
+                ->orWhere('sku', 'ilike', '%' . $request->search . '%');
             });
         }
 

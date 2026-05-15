@@ -7,10 +7,72 @@ use App\Models\Product;
 use App\Models\Customer;
 use App\Models\OrderItem;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Google\Auth\Credentials\ServiceAccountCredentials;
 
 class LaravelAiKitService
 {
+    private int $maxRetries = 3;
+    private float $retryDelay = 0.5;
+
+    protected function getGoogleAccessToken()
+    {
+        $auth = new ServiceAccountCredentials(
+            'https://www.googleapis.com/auth/cloud-platform',
+            config('services.google.service_account')
+        );
+        return $auth->fetchAuthToken()['access_token'];
+    }
+
+    /**
+     * Retry wrapper for HTTP calls
+     */
+    private function retryHttp(callable $callback, string $operation)
+    {
+        $attempts = 0;
+        $lastException = null;
+
+        while ($attempts < $this->maxRetries) {
+            try {
+                $result = $callback();
+                return $result;
+            } catch (\Exception $e) {
+                $lastException = $e;
+                $attempts++;
+                
+                if ($attempts < $this->maxRetries) {
+                    usleep($this->retryDelay * 1000000 * $attempts); // Exponential backoff
+                    Log::warning("Vertex AI retry {$attempts}/{$this->maxRetries} for {$operation}: {$e->getMessage()}");
+                }
+            }
+        }
+
+        Log::error("Vertex AI failed after {$this->maxRetries} attempts for {$operation}: {$lastException->getMessage()}");
+        throw $lastException;
+    }
+    private function getGoogleEndpoint(string $model, string $action): string
+    {
+        $project = config('services.google.project_id');
+        
+        // Gemini often uses 'global', but Imagen/embeddings usually prefer regional endpoints.
+        // We'll try us-central1 as a fallback for everything except Gemini.
+        $location = str_contains($model, 'gemini') ? 'global' : 'us-central1';
+        
+        // Try the base aiplatform endpoint which usually handles routing, 
+        // but some regions might need the regional host.
+        return "https://".(($location == 'global')? "": $location."-")."aiplatform.googleapis.com/v1/projects/{$project}/locations/{$location}/publishers/google/models/{$model}:{$action}";
+    }
+
+    public function postToVertex(string $model, string $action, array $payload, int $timeout = 30)
+    {
+        return Http::withToken($this->getGoogleAccessToken())
+            ->timeout($timeout)
+            ->post($this->getGoogleEndpoint($model, $action), $payload);
+    }
+
     /**
      * ML-driven recommendation engine with multiple strategies:
      * - Collaborative filtering (co-purchases)
@@ -72,6 +134,9 @@ class LaravelAiKitService
             ->take($maxResults)
             ->map(fn ($item) => [
                 'productId' => (int) $item['productId'],
+                'name' => Product::find($item['productId'])->name ?? 'Unknown Product',
+                'imageUrl' => Product::find($item['productId'])->media[0]->path ?? null,
+                'price' => Product::find($item['productId'])->base_price ?? null,
                 'score' => round(min(1.0, max(0.0, (float) $item['score'])), 3),
                 'reason' => $item['reason'] ?? 'Recommended based on your preferences',
             ])
@@ -191,8 +256,8 @@ class LaravelAiKitService
         $query = Product::query();
 
         foreach ($contextTags as $tag) {
-            $query->orWhere('name', 'LIKE', "%{$tag}%")
-                ->orWhere('description', 'LIKE', "%{$tag}%");
+            $query->orWhere('name', 'ilike', "%{$tag}%")
+                ->orWhere('description', 'ilike', "%{$tag}%");
         }
 
         $matches = $query->limit($limit)->get();
@@ -444,5 +509,87 @@ class LaravelAiKitService
     {
         // Placeholder: In production, call OpenAI, Google Translate, or AWS Translate
         return "[{$targetLocale}] {$text}";
+    }
+
+    public function editImage(array $payload): array
+    {
+        $prompt = $payload['prompt'];
+        $baseImageBase64 = $payload['baseImageBase64'];
+        $maskImageBase64 = $payload['maskImageBase64'] ?? null;
+        $productImageBase64 = $payload['productImageBase64'] ?? null;
+
+        $instances = [
+            'prompt' => $prompt,
+            'image' => [
+                'bytesBase64Encoded' => $baseImageBase64
+            ]
+        ];
+
+        $parameters = [
+            'sampleCount' => 1,
+            'mode' => 'edit',
+            ];
+
+        if ($maskImageBase64) {
+            $instances['mask'] = [
+                'image' => [
+                    'bytesBase64Encoded' => $maskImageBase64
+                ]
+            ];
+        } else {
+            // Mask-free / automatic masking mode.
+            // REFERENCE_TYPE_RAW (id:1) = context image — tells the model what to preserve.
+            // REFERENCE_TYPE_STYLE (id:2) = style image — the actual wallpaper pattern to apply.
+            //
+            // The Imagen 3 API requires at least one referenceImage for mask-free editing.
+            $referenceImages = [
+                [
+                    'referenceType'  => 'REFERENCE_TYPE_RAW',
+                    'referenceId'    => 1,
+                    'referenceImage' => [
+                        'bytesBase64Encoded' => $baseImageBase64
+                    ]
+                ]
+            ];
+
+            // When the caller provides the actual product texture, add it as a style
+            // reference so the model paints that specific pattern onto the walls.
+            if ($productImageBase64) {
+                $referenceImages[] = [
+                    'referenceType'  => 'REFERENCE_TYPE_STYLE',
+                    'referenceId'    => 2,
+                    'referenceImage' => [
+                        'bytesBase64Encoded' => $productImageBase64
+                    ]
+                ];
+            }
+
+            $instances['referenceImages'] = $referenceImages;
+
+            $parameters['maskConfig'] = [
+                'maskMode' => 'MASK_MODE_BACKGROUND'
+            ];
+            }
+
+        return $this->retryHttp(function () use ($instances, $parameters) {
+            // Trying imagen-3 as it's more likely to be available than the specific @006 version
+            $response = $this->postToVertex('imagen-3.0-capability-001', 'predict', [
+                'instances' => [$instances],
+                'parameters' => $parameters
+            ], 60);
+
+            if ($response->failed()) {
+                Log::error("Vertex AI Image Edit failed (Status: {$response->status()}): " . $response->body());
+                throw new \Exception("Vertex AI prediction failed: " . $response->body());
+            }
+            
+            $imageBase64 = $response->json('predictions.0.bytesBase64Encoded');
+            
+            if (!$imageBase64) {
+                Log::warning("Vertex AI Image Edit returned no prediction. Full Response: " . $response->body());
+            }
+
+            return ['image_base64' => $imageBase64];
+        }, 'image-generation');
     }
 }

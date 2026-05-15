@@ -98,9 +98,5 @@ class ProductSeeder extends Seeder
                 ]);
             }
         }
-
-        $aiService = new LaravelAiKitService();
-        $result = $aiService->syncAllProductEmbeddings();
-        $this->command->info("Embeddings synced: {$result['updated']} products updated");
     }
 }
