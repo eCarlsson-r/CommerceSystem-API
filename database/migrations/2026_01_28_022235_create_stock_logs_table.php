@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('stock_id')->constrained('stocks')->onDelete('cascade');
             $table->string('reference_id', 20); // Invoice #, Transfer ID, or Adjustment ID
-            $table->enum('type', ['sale', 'purchase', 'transfer', 'adjustment', 'return']);
+            $table->enum('type', ['SALE', 'PURCHASE', 'TRANSFER', 'ADJUSTMENT', 'RETURN']);
             $table->string('description', 250);
             $table->integer('quantity_change'); // Positive for 'ADD', Negative for 'GET'
             $table->integer('balance_after');   // The "Kartu Stok" running total

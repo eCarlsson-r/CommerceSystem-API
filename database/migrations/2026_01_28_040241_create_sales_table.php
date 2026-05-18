@@ -18,6 +18,8 @@ return new class extends Migration
             $table->foreignId('branch_id')->constrained();
             $table->foreignId('employee_id')->constrained();
             $table->foreignId('customer_id')->nullable()->constrained();
+            $table->decimal('manual_discount', 15, 2)->default(0);
+            $table->integer('applied_points')->default(0);
             $table->decimal('subtotal', 15, 2);
             $table->decimal('tax_amount', 15, 2)->default(0);
             $table->decimal('discount_amount', 15, 2)->default(0);

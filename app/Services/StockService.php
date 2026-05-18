@@ -56,7 +56,7 @@ class StockService
             // Record the "Kartu Stok" entry
             StockLog::create([
                 'stock_id' => $stock->id,
-                'type' => 'purchase',
+                'type' => 'PURCHASE',
                 'quantity_change' => $quantity,
                 'balance_after' => $stock->fresh()->quantity,
                 'description' => "Purchased at Rp " . number_format($purchasePrice),

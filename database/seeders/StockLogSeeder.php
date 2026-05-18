@@ -37,7 +37,7 @@ class StockLogSeeder extends Seeder
                     StockLog::create([
                         'stock_id' => $stock->id,
                         'reference_id' => $sale->invoice_number,
-                        'type' => 'sale',
+                        'type' => 'SALE',
                         'description' => "Item sold via {$sale->invoice_number}",
                         'quantity_change' => -$item->quantity,
                         'balance_after' => 0, // Will update later
@@ -62,7 +62,7 @@ class StockLogSeeder extends Seeder
                     StockLog::create([
                         'stock_id' => $stock->id,
                         'reference_id' => $po->order_number,
-                        'type' => 'purchase',
+                        'type' => 'PURCHASE',
                         'description' => "Stock received from PO {$po->order_number}",
                         'quantity_change' => $item->quantity,
                         'balance_after' => 0,
@@ -87,7 +87,7 @@ class StockLogSeeder extends Seeder
                     StockLog::create([
                         'stock_id' => $fromStock->id,
                         'reference_id' => 'TRF-'.$transfer->id,
-                        'type' => 'transfer',
+                        'type' => 'TRANSFER',
                         'description' => "Stock transferred to branch {$transfer->to_branch_id}",
                         'quantity_change' => -$item->quantity,
                         'balance_after' => 0,
@@ -107,7 +107,7 @@ class StockLogSeeder extends Seeder
                         StockLog::create([
                             'stock_id' => $toStock->id,
                             'reference_id' => 'TRF-'.$transfer->id,
-                            'type' => 'transfer',
+                            'type' => 'TRANSFER',
                             'description' => "Stock received from branch {$transfer->from_branch_id}",
                             'quantity_change' => $item->quantity,
                             'balance_after' => 0,
@@ -136,7 +136,7 @@ class StockLogSeeder extends Seeder
             StockLog::create([
                 'stock_id' => $stock->id,
                 'reference_id' => 'INIT',
-                'type' => 'adjustment',
+                'type' => 'ADJUSTMENT',
                 'description' => 'Initial stock seeding',
                 'quantity_change' => 50,
                 'balance_after' => 50,

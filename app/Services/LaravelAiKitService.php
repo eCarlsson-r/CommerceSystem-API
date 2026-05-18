@@ -370,6 +370,10 @@ class LaravelAiKitService
     {
         $message = trim((string) ($payload['message'] ?? ''));
         $customerId = (int) ($payload['customerId'] ?? 0);
+        $locale = (string) ($payload['locale'] ?? 'en');
+        
+        $context = $payload['context'] ?? [];
+        $history = $payload['history'] ?? $context['history'] ?? [];
 
         if ($message === '') {
             return [
@@ -381,9 +385,12 @@ class LaravelAiKitService
         // Extract keywords for contextual recommendations
         $keywords = $this->extractKeywords($message);
 
+        // Call Gemini to generate both the styling advice and contextual follow-up questions
+        $aiResult = $this->getAiResponse($message, $locale, $history, $keywords);
+
         return [
-            'reply' => $this->generateAssistantReply($message, $keywords, $customerId),
-            'followUps' => $this->generateFollowUpQuestions($keywords),
+            'reply' => $aiResult['reply'],
+            'followUps' => $aiResult['followUps'],
             'suggestedProducts' => count($keywords) > 0 ? $this->recommendations([
                 'contextTags' => $keywords,
                 'customerId' => $customerId,
@@ -419,12 +426,83 @@ class LaravelAiKitService
     }
 
     /**
-     * Generate contextual assistant replies
+     * Generate dynamic conversational replies and contextual follow-up questions from Gemini 3.1 Flash with static fallback
      */
-    private function generateAssistantReply(string $message, array $keywords, int $customerId): string
+    private function getAiResponse(string $message, string $locale, array $history, array $keywords): array
     {
-        $replies = [];
+        try {
+            $systemInstruction = "You are an expert, friendly AI wallpaper and room styling advisor for our high-end home decor boutique. "
+                . "Provide warm, inspiring, luxury-oriented design recommendations. "
+                . "Always write the response in the matching customer locale: " . ($locale === 'id' ? 'Bahasa Indonesia' : 'English') . ". "
+                . "Ensure you maintain consistency and remember details from previous turns. "
+                . "Format your output strictly as a JSON object with two keys:\n"
+                . "1. 'reply': A string containing your design recommendation. Keep it helpful, engaging, and under 3-4 sentences max. Do not include any greeting or conversational fluff, start directly with the helpful advice.\n"
+                . "2. 'followUps': An array of exactly 2-3 short, contextual, and highly relevant follow-up questions for the user to ask next (e.g., 'Suggest modern designs', 'Calculate my roll quantity', or 'I prefer pastel colors').";
 
+            $contents = [];
+            $lastRole = null;
+
+            // Map and format history ensuring role alternation for Gemini REST schema compliance
+            foreach ($history as $msg) {
+                $text = trim($msg['text'] ?? '');
+                if ($text === '') continue;
+
+                $role = ($msg['role'] === 'user' || ($msg['sender'] ?? '') === 'user') ? 'user' : 'model';
+
+                // Skip welcome message to avoid beginning history with model
+                if ($role === 'model' && empty($contents)) {
+                    continue;
+                }
+
+                if ($role === $lastRole) {
+                    $lastIdx = count($contents) - 1;
+                    $contents[$lastIdx]['parts'][0]['text'] .= "\n\n" . $text;
+                } else {
+                    $contents[] = [
+                        'role' => $role,
+                        'parts' => [['text' => $text]]
+                    ];
+                    $lastRole = $role;
+                }
+            }
+
+            // Append the latest user query
+            if ($lastRole === 'user') {
+                $lastIdx = count($contents) - 1;
+                $contents[$lastIdx]['parts'][0]['text'] .= "\n\n" . $message;
+            } else {
+                $contents[] = [
+                    'role' => 'user',
+                    'parts' => [['text' => $message]]
+                ];
+            }
+
+            $response = $this->postToVertex("gemini-3.1-flash-lite", "generateContent", [
+                'contents' => $contents,
+                'systemInstruction' => [
+                    'parts' => [['text' => $systemInstruction]]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json'
+                ]
+            ]);
+
+            if ($response->successful()) {
+                $rawText = trim($response->json('candidates.0.content.parts.0.text'));
+                $data = json_decode($rawText, true);
+                if (isset($data['reply']) && isset($data['followUps'])) {
+                    return [
+                        'reply' => $data['reply'],
+                        'followUps' => is_array($data['followUps']) ? $data['followUps'] : [],
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            Log::warning("Vertex AI dynamic assistant call failed, using rule-based fallback. Error: " . $e->getMessage());
+        }
+
+        // Fallback response if LLM call fails
+        $replies = [];
         if (in_array('bedroom', $keywords)) {
             $replies[] = 'For bedroom wallpaper, consider calming colors and patterns that promote relaxation.';
         }
@@ -437,7 +515,6 @@ class LaravelAiKitService
         if (in_array('vintage', $keywords)) {
             $replies[] = 'Vintage designs work best with rich textures and classic patterns.';
         }
-
         if (empty($replies)) {
             $replies[] = 'Based on your request, I recommend starting with a sample roll to test the pattern and color in your space.';
         }
@@ -445,28 +522,25 @@ class LaravelAiKitService
         $baseReply = implode(' ', $replies);
         $baseReply .= ' Would you like me to calculate quantity needed, or suggest specific patterns matching your style?';
 
-        return $baseReply;
-    }
-
-    /**
-     * Generate follow-up questions based on context
-     */
-    private function generateFollowUpQuestions(array $keywords): array
-    {
-        $followUps = [
-            'What room type is this wallpaper for?',
-            'Do you prefer subtle or statement patterns?',
-            'Would you like washable material recommendations?',
-            'What is your approximate wall size?',
-            'Do you have a preferred color palette?',
-        ];
-
-        // Customize based on extracted keywords
-        if (in_array('bedroom', $keywords)) {
-            $followUps[] = 'Would you prefer calming or energizing colors for your bedroom?';
+        $localFollowUps = [];
+        if ($locale === 'id') {
+            $localFollowUps = [
+                'Hitung jumlah roll?',
+                'Rekomendasi warna?',
+                'Sampel gratis?',
+            ];
+        } else {
+            $localFollowUps = [
+                'Calculate roll quantity?',
+                'Recommend specific colors?',
+                'Get free samples?',
+            ];
         }
 
-        return array_slice($followUps, 0, 3);
+        return [
+            'reply' => $baseReply,
+            'followUps' => $localFollowUps,
+        ];
     }
 
     public function translateDraft(array $payload): array

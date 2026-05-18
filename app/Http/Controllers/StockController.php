@@ -72,7 +72,7 @@ class StockController extends Controller
                     $transfer->to_branch_id,
                     $item->product_id,
                     $item->quantity,
-                    'TRANSFER_IN'
+                    'TRANSFER'
                 );
             }
 

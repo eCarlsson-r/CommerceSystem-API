@@ -202,7 +202,7 @@ class OrderController extends Controller
 
                      StockLog::create([
                          'stock_id' => $stock->id,
-                         'type' => 'sale',
+                         'type' => 'SALE',
                          'reference_id' => $order->order_number,
                          'quantity_change' => -$item->quantity,
                          'balance_after' => $stock->fresh()->quantity,
@@ -285,7 +285,7 @@ class OrderController extends Controller
                     StockLog::create([
                         'stock_id' => $stock->id,
                         'quantity' => $item->quantity,
-                        'type' => 'return',
+                        'type' => 'RETURN',
                         'note' => "Restocked from Cancelled Order #{$order->id}",
                         'user_id' => auth()->id()
                     ]);

@@ -1,6 +1,6 @@
 # ⚙️ CommerceSystem-API
 
-### The Enterprise-Grade Backbone of Modern Commerce.
+### The AI-Powered Enterprise Engine & Core Orchestration Hub
 
 [![Laravel 12](https://img.shields.io/badge/Laravel-12.x-FF2D20?style=for-the-badge&logo=laravel)](https://laravel.com)
 [![PHP 8.4](https://img.shields.io/badge/PHP-8.4+-777BB4?style=for-the-badge&logo=php)](https://www.php.net/)
@@ -8,62 +8,64 @@
 [![Sanctum](https://img.shields.io/badge/Auth-Sanctum-brightgreen?style=for-the-badge)](https://laravel.com/docs/12.x/sanctum)
 [![Real-Time](https://img.shields.io/badge/Real_Time-Reverb-blue?style=for-the-badge&logo=websocket)](https://laravel.com/docs/broadcasting)
 
-**CommerceSystem-API** is the robust, scalable foundation powering the entire CommerceSystem ecosystem. It delivers enterprise-level API services for seamless integration between customer storefronts, point-of-sale systems, and administrative dashboards—ensuring real-time inventory accuracy, secure transactions, and comprehensive business intelligence across all channels.
-
-Built with **Laravel 12** and **PHP 8.4**, it combines Laravel's battle-tested framework with modern web standards for unparalleled reliability and performance.
+**CommerceSystem-API** is the central nervous system and production-ready backbone powering the entire CommerceSystem ecosystem. Rather than serving as a passive database, this engine acts as an **AI Orchestration Hub** built with **Laravel 12** and **PHP 8.4**. It natively bridges enterprise ERP operations with Google DeepMind's models via Vertex AI and Google AI Studio, enabling autonomous agentic workflows across digital and physical storefronts.
 
 ---
 
-## ✨ Key Features
+## 🚀 TechEx Multi-Repo Ecosystem Mapping
 
-### �️ Customer-Facing Storefront APIs
+Because this is an interconnected enterprise-grade solution, the project is structured modularly across specialized layers:
+
+- ⚙️ **[CommerceSystem-API](https://github.com/eCarlsson-r/CommerceSystem-API)** (This Repository): Central Laravel Backend, Database, and Vertex AI Gateway.
+
+- 🛍️ **[CommerceStore Frontend](https://carlsson-commerce-store.vercel.app)**: Next.js Consumer Web App with interactive 3D Spatial Calculation Canvas and Sales Concierge Sidebar.
+
+- 🖥️ **[CommercePOS Frontend](https://carlsson-commerce-pos.vercel.app)**: In-store clerk Point of Sale & Physical Inventory Management Terminal.
+
+---
+
+## ✨ Intelligent Agentic & ERP Features
+
+### 🧠 Core AI & Agentic Orchestration Layer ( LaravelAiKitService )
+
+Our dedicated service core directly orchestrates multi-modal requests, state evaluations, and autonomous routines using Google's foundational models:
+
+- **Gemini-Powered Assistant Framework**: Handles semantic intent parsing and contextual history matching. It processes incoming text to automatically generate follow-up diagnostics and calculate physical materials.
+
+- **Autonomous Inventory Replenishment Agent**: Uses Gemini Function Calling patterns. When low stock metrics are triggered through POS sales logs, the system moves beyond dialogue to execute secure API requests that programmatically compile procurement drafts.
+
+- **Multi-Strategy ML Recommendation Matrix**: Merges real-time data through 5 analytical channels: Collaborative Filtering (co-purchase correlation), Content-Based Filtering (price/category clustering), Personalized User History, Contextual Style Tags, and Best-Seller fallbacks.
+
+- **Multi-Modal Vision & Inpainting Gateway**: Integrates with imagen-3.0-capability-001 via Vertex AI for mask-free background modification, reading uploaded consumer canvas profiles and projecting matching materials directly onto room walls.
+
+### ️🏪 Customer-Facing Storefront APIs
 
 Optimized for high-conversion e-commerce experiences with lightning-fast response times.
 
-- **Intelligent Product Discovery**: Advanced search, filtering, and pagination for effortless browsing.
-- **SEO-Optimized Endpoints**: Slug-based routing with rich metadata for search engine visibility.
-- **Real-Time Availability**: Instant stock updates across branches for accurate purchasing decisions.
-- **Personalized Recommendations**: AI-driven product suggestions to maximize average order value.
+- **Intelligent Product Discovery**: Advanced algorithmic query parsing, item indexing, and paginated outputs.
+- **SEO-Optimized Metadata Engine**: Custom slug extraction and high-density crawling profiles.
+- **Omnichannel Availability matrix**: True branch-level distribution lookups.
 
-### 🖥️ Administrative & POS Integration APIs
+### 🖥️ Clerk POS & Inventory Operations APIs
 
-Secure, role-based endpoints for internal operations with granular access control.
+- **Historical Audit Trails**: Complete chronological lineage logging for every stock delta.
+- **Omnichannel Order Lifecycle**: Central routing and reconciliation for online deliveries, in-store cash sales, and returns.
+- **Financial Reporting Engines**: Deep-dive daily closings, purchase logging, and cash flow sheets.
 
-- **Complete Inventory Management**: CRUD operations for products, categories, branches, and suppliers.
-- **Advanced Stock Tracking**: Real-time synchronization with historical audit trails for every movement.
-- **Omnichannel Order Processing**: Unified handling of online orders, in-store sales, and returns.
-- **Financial Reporting**: Comprehensive analytics including sales reports, purchase tracking, and daily closings.
+### 📡 Real-Time Broadcasting & Synchronization
 
-### 📡 Real-Time Synchronization & Notification Engine
-
-- **WebSocket Broadcasting**: Instant updates via Laravel Reverb for live inventory, orders, and sales status.
-- **Push Notifications**: WebPush notifications to staff and admins for orders, sales, and stock transfers.
-- **Event-Driven Architecture**: Reactive updates with queued notification processing for scalability.
-- **Cross-Channel Sync**: Seamless data flow between online storefronts, POS systems, and admin panels.
-
-### 🏢 Enterprise ERP Capabilities
-
-- **Multi-Branch Operations**: Centralized management of distributed retail locations.
-- **Supply Chain Automation**: Purchase orders, supplier management, and procurement workflows.
-- **Media Asset Management**: Centralized storage and optimization of product images and documents.
-- **Customer Relationship Management**: Profile tracking, order history, and loyalty program integration.
+- **WebSocket Core**: Live browser UI synchronization powered natively by Laravel Reverb.
+- **WebPush Notification Dispatch**: Event-driven worker streams pushing structural system shifts, low-stock warnings, and purchase alerts instantly to managers.
 
 ---
 
-## 🛠 Technical Highlights (For Developers & Architects)
+## 🛠 Technical Architecture Highlights
 
-Engineered for scale, security, and maintainability:
-
-- **Laravel Sanctum Authentication**: Stateless JWT-based auth with secure API token management.
-- **Database Agnostic**: Supports PostgreSQL, MySQL, and SQLite with Eloquent ORM for flexible deployments.
-- **Queue-Driven Processing**: Asynchronous job handling for notifications, report generation, and heavy operations.
-- **Notification System**: WebPush notifications with database persistence for orders, sales, and stock transfers.
-- **Real-Time Broadcasting**: Laravel Reverb integration for instant UI updates across all connected clients.
-- **API Rate Limiting**: Built-in throttling to prevent abuse and ensure fair resource allocation.
-- **Comprehensive Testing**: Full test suite with Feature and Unit tests covering 95%+ code coverage.
-- **Performance Optimization**: Eager loading, caching strategies, and optimized queries for sub-100ms response times.
-- **Security First**: OWASP-compliant with input validation, SQL injection prevention, and XSS protection.
-- **Developer Experience**: Laravel Pail for log streaming, Pint for code formatting, and Sail for containerized development.
+- **Google Cloud Platform Integration**: Authenticated using Cloud Platform service accounts to connect directly with global API publisher boundaries via exponential backoff filters.
+- **Laravel Sanctum Identity Management**: Stateful and token-based authentication schemas managing strict role privileges (Admins, Managers, Cashiers, Customers).
+- **Asynchronous Queue Pipeline**: Background worker orchestration isolating demanding tasks like AI text generations, image formatting, and report assemblies out of the HTTP thread loop.
+- **Defensive Design Patterns**: Strict OWASP compliance profiles utilizing input type checking, database parameter filtering, and cross-site mitigation patterns.
+- **Sub-100ms Responses**: Eager data hydration patterns and multi-tier memory caching structures.
 
 ---
 
@@ -103,6 +105,7 @@ This command handles: dependency installation, environment setup, database migra
     ```
 
 3. **Database Setup**:
+
     ```bash
     php artisan migrate
     php artisan db:seed  # Optional: Populate with sample data
@@ -112,51 +115,10 @@ This command handles: dependency installation, environment setup, database migra
     ```bash
     composer dev
     ```
-    The API will be available at `http://localhost:8000`.
 
 ---
 
-## � Development Commands
-
-| Command              | Description                                      |
-| :------------------- | :----------------------------------------------- |
-| `composer dev`       | Starts all services (server, queue, Vite)        |
-| `composer test`      | Runs full test suite                             |
-| `composer setup`     | Complete project setup (install, migrate, seed)  |
-| `php artisan serve`  | Start Laravel development server                 |
-| `php artisan queue:work` | Process background jobs                      |
-| `npm run build`      | Compile assets for production                   |
-
----
-
-## 🔐 Security & Access Control
-
-- **Role-Based Permissions**: Granular RBAC for Admins, Managers, Cashiers, and Customers.
-- **API Authentication**: Sanctum tokens with automatic expiration and refresh capabilities.
-- **Data Encryption**: Sensitive data encrypted at rest and in transit.
-- **Audit Logging**: Complete activity logs for compliance and troubleshooting.
-
----
-
-## 🤝 Ecosystem Integration
-
-**CommerceSystem-API** is the central nervous system of the CommerceSystem suite:
-
-- 🖥️ **[CommercePOS](https://github.com/eCarlsson-r/CommercePOS)** - In-store Point of Sale & Inventory Management
-- 🛍️ **[CommerceStore](https://github.com/eCarlsson-r/CommerceStore)** - Next.js E-commerce Storefront
-- ⚙️ **[CommerceSystem-API](https://github.com/eCarlsson-r/CommerceSystem-API)** - Laravel Backend & API Hub (this repository)
-
-Real-time broadcasting and push notifications ensure unified operations and instant updates across all touchpoints.
-
----
-
-## 📊 API Performance & Monitoring
-
-- **Response Times**: <100ms average for storefront endpoints, <200ms for admin operations.
-- **Uptime**: 99.9% reliability with built-in health checks and monitoring.
-- **Scalability**: Horizontal scaling support with load balancing and caching layers.
-
----
+## 📊 Core API Routing Matrix
 
 | Endpoint                   | Method | Description                      | Auth Required |
 | :------------------------- | :----- | :------------------------------- | :-----------: |
@@ -171,34 +133,15 @@ Real-time broadcasting and push notifications ensure unified operations and inst
 
 ---
 
-## 🏗 Database Seeding
+## 🧪 Testing Coverage
 
-The project comes with a comprehensive suite of seeders to populate the environment with realistic commerce data.
-
-To re-seed the entire database:
-
-```bash
-php artisan migrate:fresh --seed
-```
-
-**Available Seeders**:
-
-- `BranchSeeder`: Sets up retail locations (e.g., Medan Warehouse, Jakarta Store).
-- `SupplierSeeder`: Common vendor profiles.
-- `ProductSeeder`: Populates the catalog with diverse category assignments.
-- `SaleSeeder`: Generates historical transaction records for testing reports.
-- `PurchaseOrderSeeder`: Procurement cycle data.
-- `StockLogSeeder`: Complete audit trail for every single item movement.
-
----
-
-## 🧪 Testing
-
-Run the comprehensive test suite to ensure system stability:
+Ensure framework safety configurations remain intact by executing the test block:
 
 ```bash
 composer test
 ```
+
+Built with automated feature evaluation parameters preserving high functional code test coverage.
 
 ---
 
