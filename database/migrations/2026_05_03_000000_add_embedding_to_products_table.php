@@ -10,23 +10,35 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+        public function up(): void
     {
-        // Enable pgvector extension
-        DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
-        
-        // Add embedding column for Vertex AI text embeddings
-        // Vertex AI multimodal embeddings (multimodalembedding@001) returns 1408 dimensions
-        // text-embedding-004 returns 768 dimensions
-        // Using 768 to match text-embedding-004 model
-        DB::statement('ALTER TABLE products ADD COLUMN embedding vector(768)');
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            // PostgreSQL: Enable pgvector extension & add vector column
+            DB::statement('CREATE EXTENSION IF NOT EXISTS vector');
+            DB::statement('ALTER TABLE products ADD COLUMN embedding vector(768)');
+        } elseif ($driver === 'mariadb' || $driver === 'mysql') {
+            // MariaDB 11.8+ Native Vector
+            DB::statement('ALTER TABLE products ADD COLUMN embedding VECTOR(768) NULL');
+            
+            // Optional: You can also add an HNSW index directly for high-performance cosine search
+            DB::statement('ALTER TABLE products ADD VECTOR INDEX vec_idx (embedding) DISTANCE=COSINE');
+        } else {
+            // Fallback for older database versions or SQLite: store as JSON
+            Schema::table('products', function (Blueprint $table) {
+                $table->json('embedding')->nullable()->after('description');
+            });
+        }
     }
 
     /**
      * Reverse the migrations.
      */
+
     public function down(): void
     {
+        // Both PostgreSQL and MariaDB 11.8 support DROP COLUMN IF EXISTS
         DB::statement('ALTER TABLE products DROP COLUMN IF EXISTS embedding');
     }
 };
