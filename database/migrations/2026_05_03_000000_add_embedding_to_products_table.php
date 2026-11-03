@@ -20,7 +20,7 @@ return new class extends Migration
             DB::statement('ALTER TABLE products ADD COLUMN embedding vector(768)');
         } elseif ($driver === 'mariadb' || $driver === 'mysql') {
             // MariaDB 11.8+ Native Vector
-            DB::statement('ALTER TABLE products ADD COLUMN embedding VECTOR(768) NULL');
+            DB::statement('ALTER TABLE products ADD COLUMN embedding VECTOR(768)');
             
             // Optional: You can also add an HNSW index directly for high-performance cosine search
             DB::statement('ALTER TABLE products ADD VECTOR INDEX vec_idx (embedding) DISTANCE=COSINE');
